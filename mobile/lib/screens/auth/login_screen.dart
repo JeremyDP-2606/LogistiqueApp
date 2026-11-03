@@ -35,12 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Container(
-                width: 64,
-                height: 64,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: brand, borderRadius: BorderRadius.circular(18)),
-                child: const Text('L', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800)),
+              Center(
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: brand, borderRadius: BorderRadius.circular(18)),
+                  child: const Text('L', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w800)),
+                ),
               ),
               const SizedBox(height: 20),
               const Text('LogistiqueApp', textAlign: TextAlign.center, style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),

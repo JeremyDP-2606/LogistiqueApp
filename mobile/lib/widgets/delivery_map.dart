@@ -17,6 +17,8 @@ class DeliveryMap extends StatefulWidget {
 
 class _DeliveryMapState extends State<DeliveryMap> {
   final _controller = MapController();
+  // Fournisseur de tuiles unique : en recréer un à chaque build annule les téléchargements en cours.
+  final _tileProvider = NetworkTileProvider();
   bool _ready = false;
 
   List<LatLng> get _points => [widget.pickup, widget.dropoff, widget.courier].whereType<LatLng>().toList();
@@ -64,17 +66,19 @@ class _DeliveryMapState extends State<DeliveryMap> {
         child: FlutterMap(
           mapController: _controller,
           options: MapOptions(
+            // Cadrage initial direct : recadrer dans onMapReady annule les premiers téléchargements de tuiles.
             initialCenter: _points.isNotEmpty ? _points.first : const LatLng(48.8566, 2.3522),
-            initialZoom: 12,
-            onMapReady: () {
-              _ready = true;
-              _fit();
-            },
+            initialZoom: _points.length == 1 ? 14 : 12,
+            initialCameraFit: _points.length > 1
+                ? CameraFit.coordinates(coordinates: _points, padding: const EdgeInsets.all(48))
+                : null,
+            onMapReady: () => _ready = true,
           ),
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'fr.logistiqueapp.mobile',
+              tileProvider: _tileProvider,
             ),
             if (widget.pickup != null && widget.dropoff != null)
               PolylineLayer(polylines: [
