@@ -8,7 +8,7 @@ import {
   computePendingDeliveries,
   computeSubscribersDelivered,
   computePackagesDelivered
-} from "@/api/StatisticsService";
+} from "@/api/statisticsService";
 import { getMissions } from "@/api/missionService";
 import { getTourneeByMission } from "@/api/tourneeService";
 import { getTourneeByUser } from "@/api/tourneeService";

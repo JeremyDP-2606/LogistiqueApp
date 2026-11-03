@@ -13,6 +13,9 @@ import UserView from "@/views/UserView.vue";
 import UserEditView from "@/views/UserEditView.vue";
 import AddSubscriberView from "@/views/AddSubscriberView.vue";
 import StatisticsView from "@/views/StatisticsView.vue";
+import CoursesView from "@/views/CoursesView.vue";
+import CourseView from "@/views/CourseView.vue";
+import TarifsView from "@/views/TarifsView.vue";
 import { isUserAuthenticated, isAuthorized, isAdmin } from "@/util/auth";
 import { Auth } from "@aws-amplify/auth";
 
@@ -72,6 +75,21 @@ const routes = [
         component: AddSubscriberView,
       },
       {
+        path: "/courses",
+        name: "Courses",
+        component: CoursesView,
+      },
+      {
+        path: "/course/:id",
+        name: "Course",
+        component: CourseView,
+      },
+      {
+        path: "/tarifs",
+        name: "Tarifs",
+        component: TarifsView,
+      },
+      {
         path: "/statistics",
         name: "Statistiques",
         component: StatisticsView,
@@ -117,7 +135,7 @@ router.beforeEach(async (to, from, next) => {
     next("/login");
   } else if ((to.path === "/" || to.path === "/login") && isAuthenticated) {
     next("/missions");
-  } else if ((to.path.includes("edit") || to.path.includes("create")) && !isAdmi) {
+  } else if ((to.path.includes("edit") || to.path.includes("create") || to.path === "/tarifs") && !isAdmi) {
     next("/missions");
   } else {
     next();

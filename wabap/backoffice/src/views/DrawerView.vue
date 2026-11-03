@@ -120,6 +120,23 @@ const closeDrawer = () => {
               :style="{ color: isActive('/addsubscriber') ? color.primary : '' }"
             ></v-list-item>
             <v-list-item
+              prepend-icon="mdi-lightning-bolt-outline"
+              title="Courses à la demande"
+              value="courses"
+              to="/courses"
+              :class="{ 'v-list-item--active': isActive('/course') }"
+              :style="{ color: isActive('/course') ? color.primary : '' }"
+            ></v-list-item>
+            <v-list-item
+              v-if="userIsAdmin"
+              prepend-icon="mdi-cash-multiple"
+              title="Tarifs"
+              value="tarifs"
+              to="/tarifs"
+              :class="{ 'v-list-item--active': isActive('/tarifs') }"
+              :style="{ color: isActive('/tarifs') ? color.primary : '' }"
+            ></v-list-item>
+            <v-list-item
               v-if="userIsAdmin"
               prepend-icon="mdi-calculator"
               title="Statistiques"
