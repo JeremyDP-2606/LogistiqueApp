@@ -1,0 +1,936 @@
+{
+  "tour": {
+    "__typename": "Tour",
+    "id": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+    "ref": "T-261103-EK1",
+    "name": "Fort-de-France · matin",
+    "date": "2026-11-03",
+    "slot": "DAY",
+    "startTime": "2026-11-03T10:30:00.000Z",
+    "start": {
+      "formatted": "Dépôt Wabap, Zone de la Jambette, Le Lamentin",
+      "latitude": 14.615,
+      "longitude": -61.032
+    },
+    "end": {
+      "formatted": "Dépôt Wabap, Zone de la Jambette, Le Lamentin",
+      "latitude": 14.615,
+      "longitude": -61.032
+    },
+    "courierId": "livreur-steeve",
+    "status": "IN_PROGRESS",
+    "dedicatedCustomerId": null,
+    "orderIds": [
+      "b40a972d-6861-4a0f-b075-06204fac6325",
+      "ab1ab514-21df-4d0c-acb2-e393d00082bd",
+      "d9470e73-7b08-4a5a-bb0c-7f9e7d6e07a8",
+      "b3a5a01e-cf6b-4b31-b4e9-9a6570fad760",
+      "8b63f634-5067-49f2-ac17-33809609eba9",
+      "d99a5f2a-7ac4-4af6-be05-eac5b6c52707"
+    ],
+    "customerIds": [
+      "ENSEIGNE",
+      "GARAGE",
+      "PHARMACIE"
+    ],
+    "estimatedKm": 12.34,
+    "estimatedMinutes": 61,
+    "alerts": [],
+    "notices": [],
+    "incidents": [],
+    "createdAt": "2026-11-03T16:40:01.237Z",
+    "updatedAt": "2026-11-03T16:40:01.239Z",
+    "startedAt": "2026-11-03T16:40:01.239Z"
+  },
+  "stops": [
+    {
+      "__typename": "Stop",
+      "id": "9114f1e2-6635-4514-9790-2c1ebd7cf059",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "PICKUP",
+      "customerId": "ENSEIGNE",
+      "address": {
+        "number": null,
+        "street": "Zone de la Jambette",
+        "complement": null,
+        "postalCode": "97232",
+        "city": "Le Lamentin",
+        "country": "FR",
+        "latitude": 14.616,
+        "longitude": -61.03,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "Zone de la Jambette, 97232 Le Lamentin"
+      },
+      "contact": {
+        "name": "Entrepôt Enseigne Caraïbes",
+        "phone": null,
+        "email": null
+      },
+      "instructions": null,
+      "orderIds": [
+        "b40a972d-6861-4a0f-b075-06204fac6325",
+        "ab1ab514-21df-4d0c-acb2-e393d00082bd",
+        "d9470e73-7b08-4a5a-bb0c-7f9e7d6e07a8",
+        "b3a5a01e-cf6b-4b31-b4e9-9a6570fad760"
+      ],
+      "parcelIds": [
+        "2TMW3T",
+        "4DQKV3",
+        "JVJX2Y",
+        "85SFAZ",
+        "EGNEV6"
+      ],
+      "requires": [],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "DONE",
+      "sequence": 1,
+      "eta": "2026-11-03T10:30:37.786Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.241Z",
+      "legKm": 0.31,
+      "doneAt": "2026-11-03T16:40:01.241Z",
+      "distanceMeters": 0,
+      "distanceAlert": false,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "2TMW3T",
+          "code": "WB1.2TMW3T.NT8BCH.20mKHDq-30",
+          "orderId": "b40a972d-6861-4a0f-b075-06204fac6325",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "FAILED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.212Z",
+          "updatedAt": "2026-11-03T16:40:01.244Z"
+        },
+        {
+          "__typename": "Parcel",
+          "id": "4DQKV3",
+          "code": "WB1.4DQKV3.NT8BCH.wV1AoBbsRx",
+          "orderId": "ab1ab514-21df-4d0c-acb2-e393d00082bd",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "PICKED_UP",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.214Z",
+          "updatedAt": "2026-11-03T16:40:01.241Z"
+        },
+        {
+          "__typename": "Parcel",
+          "id": "JVJX2Y",
+          "code": "WB1.JVJX2Y.NT8BCH.dyLfuBPY3k",
+          "orderId": "d9470e73-7b08-4a5a-bb0c-7f9e7d6e07a8",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 2,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "DELIVERED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.214Z",
+          "updatedAt": "2026-11-03T16:40:01.242Z"
+        },
+        {
+          "__typename": "Parcel",
+          "id": "85SFAZ",
+          "code": "WB1.85SFAZ.NT8BCH.sGwQOMxFXI",
+          "orderId": "d9470e73-7b08-4a5a-bb0c-7f9e7d6e07a8",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 2,
+          "total": 2,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "DELIVERED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.214Z",
+          "updatedAt": "2026-11-03T16:40:01.242Z"
+        },
+        {
+          "__typename": "Parcel",
+          "id": "EGNEV6",
+          "code": "WB1.EGNEV6.NT8BCH.Zrq-JeLU6g",
+          "orderId": "b3a5a01e-cf6b-4b31-b4e9-9a6570fad760",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "PICKED_UP",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.215Z",
+          "updatedAt": "2026-11-03T16:40:01.241Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": false,
+          "signature": false,
+          "geoloc": false,
+          "otp": false
+        },
+        "scanParcelIds": [
+          "2TMW3T",
+          "4DQKV3",
+          "JVJX2Y",
+          "85SFAZ",
+          "EGNEV6"
+        ]
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "7667caa4-99ac-4e17-a669-896e978cafc1",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "DELIVERY",
+      "customerId": "ENSEIGNE",
+      "address": {
+        "number": "11",
+        "street": "Boulevard du Général de Gaulle",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.607,
+        "longitude": -61.068,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "11 Boulevard du Général de Gaulle, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Sandrine Céleste",
+        "phone": "+596696203343",
+        "email": null
+      },
+      "instructions": null,
+      "orderIds": [
+        "d9470e73-7b08-4a5a-bb0c-7f9e7d6e07a8"
+      ],
+      "parcelIds": [
+        "JVJX2Y",
+        "85SFAZ"
+      ],
+      "requires": [
+        "9114f1e2-6635-4514-9790-2c1ebd7cf059"
+      ],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "DONE",
+      "sequence": 2,
+      "eta": "2026-11-03T10:45:34.459Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.242Z",
+      "legKm": 5.47,
+      "doneAt": "2026-11-03T16:40:01.242Z",
+      "distanceMeters": 0,
+      "distanceAlert": false,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "JVJX2Y",
+          "code": "WB1.JVJX2Y.NT8BCH.dyLfuBPY3k",
+          "orderId": "d9470e73-7b08-4a5a-bb0c-7f9e7d6e07a8",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 2,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "DELIVERED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.214Z",
+          "updatedAt": "2026-11-03T16:40:01.242Z"
+        },
+        {
+          "__typename": "Parcel",
+          "id": "85SFAZ",
+          "code": "WB1.85SFAZ.NT8BCH.sGwQOMxFXI",
+          "orderId": "d9470e73-7b08-4a5a-bb0c-7f9e7d6e07a8",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 2,
+          "total": 2,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "DELIVERED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.214Z",
+          "updatedAt": "2026-11-03T16:40:01.242Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": true,
+          "signature": false,
+          "geoloc": true,
+          "otp": false
+        },
+        "scanParcelIds": []
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "8efd7341-b875-4827-99c0-f89fa471eb8a",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "PICKUP",
+      "customerId": "GARAGE",
+      "address": {
+        "number": "14",
+        "street": "rue Lamartine",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.605,
+        "longitude": -61.07,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "14 rue Lamartine, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Garage Lamartine",
+        "phone": "+596596601122",
+        "email": null
+      },
+      "instructions": null,
+      "orderIds": [
+        "8b63f634-5067-49f2-ac17-33809609eba9"
+      ],
+      "parcelIds": [
+        "YJXTZG"
+      ],
+      "requires": [],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "DONE",
+      "sequence": 3,
+      "eta": "2026-11-03T10:50:22.736Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.242Z",
+      "legKm": 0.4,
+      "doneAt": "2026-11-03T16:40:01.242Z",
+      "distanceMeters": 0,
+      "distanceAlert": false,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "YJXTZG",
+          "code": "WB1.YJXTZG.82BS05.sEku0pEwv5",
+          "orderId": "8b63f634-5067-49f2-ac17-33809609eba9",
+          "customerId": "GARAGE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "L",
+          "weightKg": 6,
+          "proofProfileId": null,
+          "status": "PICKED_UP",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.218Z",
+          "updatedAt": "2026-11-03T16:40:01.242Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": false,
+          "signature": false,
+          "geoloc": false,
+          "otp": false
+        },
+        "scanParcelIds": [
+          "YJXTZG"
+        ]
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "5cdf175f-6a16-4203-a186-9eabb161d6d5",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "PICKUP",
+      "customerId": "PHARMACIE",
+      "address": {
+        "number": null,
+        "street": "Rue de la République",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.6026,
+        "longitude": -61.0705,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "Rue de la République, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Pharmacie de la Savane",
+        "phone": null,
+        "email": null
+      },
+      "instructions": null,
+      "orderIds": [
+        "d99a5f2a-7ac4-4af6-be05-eac5b6c52707"
+      ],
+      "parcelIds": [
+        "0V8PG8"
+      ],
+      "requires": [],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "DONE",
+      "sequence": 4,
+      "eta": "2026-11-03T10:55:05.205Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.243Z",
+      "legKm": 0.35,
+      "doneAt": "2026-11-03T16:40:01.243Z",
+      "distanceMeters": 0,
+      "distanceAlert": false,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "0V8PG8",
+          "code": "WB1.0V8PG8.F2AM8E.SxQxUmkg2S",
+          "orderId": "d99a5f2a-7ac4-4af6-be05-eac5b6c52707",
+          "customerId": "PHARMACIE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "S",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "DELIVERED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.218Z",
+          "updatedAt": "2026-11-03T16:40:01.243Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": false,
+          "signature": false,
+          "geoloc": false,
+          "otp": false
+        },
+        "scanParcelIds": [
+          "0V8PG8"
+        ]
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "2aac5be8-1026-415c-b7a5-3c8f2ad2a657",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "DELIVERY",
+      "customerId": "PHARMACIE",
+      "address": {
+        "number": "7",
+        "street": "rue Ernest Deproge",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.601,
+        "longitude": -61.069,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "7 rue Ernest Deproge, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Mme Rosette",
+        "phone": "+596696708090",
+        "email": null
+      },
+      "instructions": null,
+      "orderIds": [
+        "d99a5f2a-7ac4-4af6-be05-eac5b6c52707"
+      ],
+      "parcelIds": [
+        "0V8PG8"
+      ],
+      "requires": [
+        "5cdf175f-6a16-4203-a186-9eabb161d6d5"
+      ],
+      "deadlineAt": "2026-11-03T16:00:00.000Z",
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": true,
+      "locked": false,
+      "status": "DONE",
+      "sequence": 5,
+      "eta": "2026-11-03T10:59:42.679Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.243Z",
+      "legKm": 0.31,
+      "doneAt": "2026-11-03T16:40:01.243Z",
+      "distanceMeters": 445,
+      "distanceAlert": true,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "0V8PG8",
+          "code": "WB1.0V8PG8.F2AM8E.SxQxUmkg2S",
+          "orderId": "d99a5f2a-7ac4-4af6-be05-eac5b6c52707",
+          "customerId": "PHARMACIE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "S",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "DELIVERED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.218Z",
+          "updatedAt": "2026-11-03T16:40:01.243Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": true,
+          "signature": false,
+          "geoloc": true,
+          "otp": false
+        },
+        "scanParcelIds": []
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "031f12e1-5f01-4fd1-b847-068fb00d38db",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "DELIVERY",
+      "customerId": "ENSEIGNE",
+      "address": {
+        "number": "5",
+        "street": "Rue Victor Hugo",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.6037,
+        "longitude": -61.0731,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "5 Rue Victor Hugo, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Joseph Marie-Line",
+        "phone": "+596696203141",
+        "email": null
+      },
+      "instructions": "2e étage, code 4521",
+      "orderIds": [
+        "b40a972d-6861-4a0f-b075-06204fac6325"
+      ],
+      "parcelIds": [
+        "2TMW3T"
+      ],
+      "requires": [
+        "9114f1e2-6635-4514-9790-2c1ebd7cf059"
+      ],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "FAILED",
+      "sequence": 6,
+      "eta": "2026-11-03T11:05:05.927Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.244Z",
+      "legKm": 0.69,
+      "doneAt": "2026-11-03T16:40:01.244Z",
+      "failureReason": "Destinataire absent",
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "2TMW3T",
+          "code": "WB1.2TMW3T.NT8BCH.20mKHDq-30",
+          "orderId": "b40a972d-6861-4a0f-b075-06204fac6325",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "FAILED",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.212Z",
+          "updatedAt": "2026-11-03T16:40:01.244Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": true,
+          "signature": false,
+          "geoloc": true,
+          "otp": false
+        },
+        "scanParcelIds": []
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "32486d7d-a7ba-40c2-ba94-d4dfdac6dbe0",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "DELIVERY",
+      "customerId": "GARAGE",
+      "address": {
+        "number": null,
+        "street": "Cluny",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.619,
+        "longitude": -61.074,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "Cluny, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Carrosserie Cluny",
+        "phone": "+596696506070",
+        "email": null
+      },
+      "instructions": "Pièce : rétroviseur",
+      "orderIds": [
+        "8b63f634-5067-49f2-ac17-33809609eba9"
+      ],
+      "parcelIds": [
+        "YJXTZG"
+      ],
+      "requires": [
+        "8efd7341-b875-4827-99c0-f89fa471eb8a"
+      ],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "TODO",
+      "sequence": 7,
+      "eta": "2026-11-03T11:13:31.756Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.238Z",
+      "legKm": 2.22,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "YJXTZG",
+          "code": "WB1.YJXTZG.82BS05.sEku0pEwv5",
+          "orderId": "8b63f634-5067-49f2-ac17-33809609eba9",
+          "customerId": "GARAGE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "L",
+          "weightKg": 6,
+          "proofProfileId": null,
+          "status": "PICKED_UP",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.218Z",
+          "updatedAt": "2026-11-03T16:40:01.242Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": false,
+          "signature": true,
+          "geoloc": true,
+          "otp": false
+        },
+        "scanParcelIds": [
+          "YJXTZG"
+        ]
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "c63fcfe2-18fd-4dfc-b263-49ffebd7f720",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "DELIVERY",
+      "customerId": "ENSEIGNE",
+      "address": {
+        "number": "8",
+        "street": "Route de Didier",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.628,
+        "longitude": -61.08,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "8 Route de Didier, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Alexis Dorval",
+        "phone": "+596696203242",
+        "email": null
+      },
+      "instructions": null,
+      "orderIds": [
+        "ab1ab514-21df-4d0c-acb2-e393d00082bd"
+      ],
+      "parcelIds": [
+        "4DQKV3"
+      ],
+      "requires": [
+        "9114f1e2-6635-4514-9790-2c1ebd7cf059"
+      ],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "TODO",
+      "sequence": 8,
+      "eta": "2026-11-03T11:20:37.537Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.238Z",
+      "legKm": 1.55,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "4DQKV3",
+          "code": "WB1.4DQKV3.NT8BCH.wV1AoBbsRx",
+          "orderId": "ab1ab514-21df-4d0c-acb2-e393d00082bd",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "PICKED_UP",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.214Z",
+          "updatedAt": "2026-11-03T16:40:01.241Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": true,
+          "signature": false,
+          "geoloc": true,
+          "otp": false
+        },
+        "scanParcelIds": []
+      }
+    },
+    {
+      "__typename": "Stop",
+      "id": "ac55f688-5f39-482e-b2ae-3db4d48ad952",
+      "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+      "courierId": "livreur-steeve",
+      "type": "DELIVERY",
+      "customerId": "ENSEIGNE",
+      "address": {
+        "number": "14",
+        "street": "Route de Redoute",
+        "complement": null,
+        "postalCode": "97200",
+        "city": "Fort-de-France",
+        "country": "FR",
+        "latitude": 14.634,
+        "longitude": -61.076,
+        "geocodeQuality": "ROOFTOP",
+        "formatted": "14 Route de Redoute, 97200 Fort-de-France"
+      },
+      "contact": {
+        "name": "Patrick Montout",
+        "phone": "+596696203444",
+        "email": null
+      },
+      "instructions": null,
+      "orderIds": [
+        "b3a5a01e-cf6b-4b31-b4e9-9a6570fad760"
+      ],
+      "parcelIds": [
+        "EGNEV6"
+      ],
+      "requires": [
+        "9114f1e2-6635-4514-9790-2c1ebd7cf059"
+      ],
+      "deadlineAt": null,
+      "windowStart": null,
+      "windowEnd": null,
+      "hard": false,
+      "locked": false,
+      "status": "TODO",
+      "sequence": 9,
+      "eta": "2026-11-03T11:26:41.390Z",
+      "createdAt": "2026-11-03T16:40:01.238Z",
+      "updatedAt": "2026-11-03T16:40:01.238Z",
+      "legKm": 1.03,
+      "parcels": [
+        {
+          "__typename": "Parcel",
+          "id": "EGNEV6",
+          "code": "WB1.EGNEV6.NT8BCH.Zrq-JeLU6g",
+          "orderId": "b3a5a01e-cf6b-4b31-b4e9-9a6570fad760",
+          "customerId": "ENSEIGNE",
+          "ownerSub": null,
+          "index": 1,
+          "total": 1,
+          "size": "M",
+          "weightKg": null,
+          "proofProfileId": null,
+          "status": "PICKED_UP",
+          "labelStatus": "ACTIVE",
+          "expected": true,
+          "tourId": "6d1bc125-6ff2-405a-bc24-4afa620a6de9",
+          "createdAt": "2026-11-03T16:40:01.215Z",
+          "updatedAt": "2026-11-03T16:40:01.241Z"
+        }
+      ],
+      "requirements": {
+        "perStop": {
+          "photo": true,
+          "signature": false,
+          "geoloc": true,
+          "otp": false
+        },
+        "scanParcelIds": []
+      }
+    }
+  ],
+  "presets": [
+    {
+      "__typename": "CommentPreset",
+      "createdAt": "2026-11-03T16:40:01.208Z",
+      "updatedAt": "2026-11-03T16:40:01.208Z",
+      "id": "acces",
+      "kind": "DELIVERY",
+      "label": "Accès difficile",
+      "clientVisible": false,
+      "mandatory": false,
+      "active": "yes"
+    },
+    {
+      "__typename": "CommentPreset",
+      "createdAt": "2026-11-03T16:40:01.208Z",
+      "updatedAt": "2026-11-03T16:40:01.208Z",
+      "id": "introuvable",
+      "kind": "FAILURE",
+      "label": "Adresse introuvable",
+      "clientVisible": true,
+      "mandatory": true,
+      "active": "yes"
+    },
+    {
+      "__typename": "CommentPreset",
+      "createdAt": "2026-11-03T16:40:01.208Z",
+      "updatedAt": "2026-11-03T16:40:01.208Z",
+      "id": "abime",
+      "kind": "PICKUP",
+      "label": "Colis abîmé à la collecte",
+      "clientVisible": true,
+      "mandatory": false,
+      "active": "yes"
+    },
+    {
+      "__typename": "CommentPreset",
+      "createdAt": "2026-11-03T16:40:01.208Z",
+      "updatedAt": "2026-11-03T16:40:01.208Z",
+      "id": "refuse",
+      "kind": "FAILURE",
+      "label": "Colis refusé",
+      "clientVisible": true,
+      "mandatory": true,
+      "active": "yes"
+    },
+    {
+      "__typename": "CommentPreset",
+      "createdAt": "2026-11-03T16:40:01.208Z",
+      "updatedAt": "2026-11-03T16:40:01.208Z",
+      "id": "bal",
+      "kind": "DELIVERY",
+      "label": "Déposé en boîte aux lettres",
+      "clientVisible": true,
+      "mandatory": false,
+      "active": "yes"
+    },
+    {
+      "__typename": "CommentPreset",
+      "createdAt": "2026-11-03T16:40:01.208Z",
+      "updatedAt": "2026-11-03T16:40:01.208Z",
+      "id": "absent",
+      "kind": "FAILURE",
+      "label": "Destinataire absent",
+      "clientVisible": true,
+      "mandatory": true,
+      "active": "yes"
+    },
+    {
+      "__typename": "CommentPreset",
+      "createdAt": "2026-11-03T16:40:01.208Z",
+      "updatedAt": "2026-11-03T16:40:01.208Z",
+      "id": "gardien",
+      "kind": "DELIVERY",
+      "label": "Laissé au gardien",
+      "clientVisible": true,
+      "mandatory": false,
+      "active": "yes"
+    }
+  ]
+}

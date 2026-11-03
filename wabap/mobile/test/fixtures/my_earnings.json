@@ -1,0 +1,46 @@
+{
+  "id": "livreur-karim-2026-11",
+  "courierId": "livreur-karim",
+  "month": "2026-11",
+  "status": "TO_VALIDATE",
+  "paidAt": null,
+  "tours": [
+    {
+      "tourId": "1b53ece1-68f8-4188-8745-071ed2db8645",
+      "ref": "T-261102-1D5",
+      "date": "2026-11-02",
+      "km": 9.55,
+      "amount": 25,
+      "status": "TO_VALIDATE",
+      "lines": [
+        {
+          "kind": "KM",
+          "label": "9,55 km de jour · pme × 0,65 €",
+          "km": 9.55,
+          "slot": "DAY",
+          "customerTypeId": "pme",
+          "amount": 6.21
+        },
+        {
+          "kind": "STOP",
+          "label": "2 point(s) × 0,50 €",
+          "amount": 1
+        },
+        {
+          "kind": "MINIMUM",
+          "label": "Minimum par tournée (25,00 €)",
+          "amount": 17.79
+        }
+      ],
+      "adjustments": []
+    }
+  ],
+  "km": 9.55,
+  "total": 25,
+  "days": [
+    {
+      "date": "2026-11-02",
+      "amount": 25
+    }
+  ]
+}

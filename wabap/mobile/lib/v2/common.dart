@@ -3,46 +3,55 @@ import 'package:flutter/material.dart';
 
 import '../colors.dart';
 
-const statusLabels = {
+// Statuts d'une demande (spec §13), vus par le client
+const orderStatusLabels = {
   'AWAITING_PAYMENT': 'Paiement en attente',
-  'PENDING': 'Recherche d’un livreur',
-  'ASSIGNED': 'Livreur en route',
-  'PICKING_UP': 'Livreur en route vers le retrait',
-  'PICKED_UP': 'Colis récupéré',
-  'DELIVERING': 'En cours de livraison',
-  'COMPLETED': 'Livrée',
-  'ISSUE': 'Problème de livraison',
+  'CREATED': 'Payée, en attente de planification',
+  'TO_FIX': 'En cours de vérification',
+  'PLANNED': 'Planifiée',
+  'IN_PROGRESS': 'En cours',
+  'DONE': 'Livrée',
+  'PARTIALLY_FAILED': 'Échec de livraison',
   'CANCELLED': 'Annulée',
 };
+
+const tourStatusLabels = {
+  'DRAFT': 'Brouillon',
+  'PLANNED': 'Planifiée',
+  'ASSIGNED': 'À accepter',
+  'ACCEPTED': 'Acceptée',
+  'IN_PROGRESS': 'En cours',
+  'DONE': 'Terminée',
+  'VALIDATED': 'Validée',
+};
+
+const stopStatusLabels = {'TODO': 'À faire', 'DONE': 'Fait', 'PARTIAL': 'Partiel', 'FAILED': 'Échec'};
 
 Color statusColor(String s) {
   switch (s) {
     case 'AWAITING_PAYMENT':
-    case 'PENDING':
+    case 'TO_FIX':
+    case 'ASSIGNED':
       return C.secondary;
-    case 'COMPLETED':
+    case 'DONE':
+    case 'VALIDATED':
       return C.ok;
-    case 'ISSUE':
+    case 'PARTIALLY_FAILED':
+    case 'FAILED':
       return C.error;
     case 'CANCELLED':
+    case 'DRAFT':
       return C.textColor;
     default:
       return C.blue;
   }
 }
 
-const vehicleLabels = {'BIKE': 'Vélo', 'MOTORBIKE': 'Scooter', 'CAR': 'Voiture', 'VAN': 'Utilitaire'};
-const vehicleIcons = {
-  'BIKE': Icons.pedal_bike,
-  'MOTORBIKE': Icons.moped,
-  'CAR': Icons.directions_car,
-  'VAN': Icons.local_shipping,
-};
 const sizeLabels = {
-  'S': 'Petit · enveloppe, sac',
-  'M': 'Moyen · carton à chaussures',
-  'L': 'Grand · carton de déménagement',
-  'XL': 'Très grand · meuble, palette',
+  'S': 'Petit · enveloppe, sac (2 kg max)',
+  'M': 'Moyen · carton à chaussures (10 kg max)',
+  'L': 'Grand · carton de déménagement (25 kg max)',
+  'XL': 'Très grand · meuble, palette (50 kg max)',
 };
 
 String eur(num? n) => '${(n ?? 0).toStringAsFixed(2).replaceAll('.', ',')} €';
@@ -53,7 +62,8 @@ String km(double v) => '${v.toStringAsFixed(1).replaceAll('.', ',')} km';
 
 class StatusChip extends StatelessWidget {
   final String status;
-  const StatusChip(this.status, {super.key});
+  final Map<String, String> labels;
+  const StatusChip(this.status, {super.key, this.labels = orderStatusLabels});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +71,7 @@ class StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(color: c.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(99)),
-      child: Text(statusLabels[status] ?? status, style: TextStyle(color: c, fontWeight: FontWeight.w600, fontSize: 12)),
+      child: Text(labels[status] ?? status, style: TextStyle(color: c, fontWeight: FontWeight.w600, fontSize: 12)),
     );
   }
 }
@@ -96,41 +106,4 @@ void showError(BuildContext context, Object e) {
 
 void showInfo(BuildContext context, String text) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-}
-
-/// Geohash (même algorithme que la Lambda) : zone d'abonnement temps réel des livreurs.
-String geohashEncode(double lat, double lng, {int precision = 4}) {
-  const base32 = '0123456789bcdefghjkmnpqrstuvwxyz';
-  var latMin = -90.0, latMax = 90.0, lngMin = -180.0, lngMax = 180.0;
-  final out = StringBuffer();
-  var bit = 0, ch = 0;
-  var even = true;
-  while (out.length < precision) {
-    if (even) {
-      final mid = (lngMin + lngMax) / 2;
-      if (lng >= mid) {
-        ch = (ch << 1) | 1;
-        lngMin = mid;
-      } else {
-        ch <<= 1;
-        lngMax = mid;
-      }
-    } else {
-      final mid = (latMin + latMax) / 2;
-      if (lat >= mid) {
-        ch = (ch << 1) | 1;
-        latMin = mid;
-      } else {
-        ch <<= 1;
-        latMax = mid;
-      }
-    }
-    even = !even;
-    if (++bit == 5) {
-      out.write(base32[ch]);
-      bit = 0;
-      ch = 0;
-    }
-  }
-  return out.toString();
 }

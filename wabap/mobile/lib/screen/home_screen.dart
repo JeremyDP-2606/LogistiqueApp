@@ -17,7 +17,7 @@ import '../provider/auth_provider.dart';
 import 'package:wabap/provider/colis_tournee_provider.dart';
 import 'package:wabap/screen/preuve_livraison/colis_pickup_process_screen.dart';
 import 'package:wabap/services/colis_status_sync_service.dart';
-import 'package:wabap/v2/screens/courier_courses_screen.dart';
+import 'package:wabap/v2/screens/courier_tours_screen.dart';
 
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) async {
   return await PackageInfo.fromPlatform();
@@ -232,9 +232,9 @@ class HomeScreen extends HookConsumerWidget {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                         ),
                         onPressed: () => Navigator.of(context)
-                            .push(MaterialPageRoute(builder: (_) => const CourierCoursesScreen())),
-                        icon: const Icon(Icons.bolt),
-                        label: const Text('Courses à la demande', style: TextStyle(fontSize: 16)),
+                            .push(MaterialPageRoute(builder: (_) => const CourierToursScreen())),
+                        icon: const Icon(Icons.route),
+                        label: const Text('Mes tournées et gains', style: TextStyle(fontSize: 16)),
                       ),
                     ),
                   const Spacer(flex: 3),

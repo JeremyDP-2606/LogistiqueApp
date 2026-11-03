@@ -1,0 +1,22 @@
+{
+  "gridId": "grille-2026",
+  "km": 6.6,
+  "lines": [
+    {
+      "label": "Prise en charge (taille M)",
+      "amount": 7
+    },
+    {
+      "label": "6,60 km × 1,00 €",
+      "amount": 6.6
+    },
+    {
+      "label": "Délai 1 jour (× 1,5)",
+      "amount": 6.8
+    }
+  ],
+  "total": 20.4,
+  "vat": 1.6,
+  "currency": "EUR",
+  "deadlineAt": "2026-11-05T03:59:00.000Z"
+}

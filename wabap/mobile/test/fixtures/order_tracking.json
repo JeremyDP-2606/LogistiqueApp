@@ -1,0 +1,115 @@
+{
+  "order": {
+    "__typename": "Order",
+    "id": "a3b00d54-526e-4a51-b539-bfb885fdcb5c",
+    "ref": "D-261103-WRG",
+    "customerId": "IND-part-demo",
+    "ownerSub": "part-demo",
+    "customerName": "Jessica",
+    "source": "CLIENT_APP",
+    "connectorId": null,
+    "externalRef": null,
+    "status": "CREATED",
+    "pickup": {
+      "address": {
+        "formatted": "3 rue de la République, 97200 Fort-de-France",
+        "street": "rue de la République",
+        "latitude": 14.6026,
+        "longitude": -61.0705,
+        "country": "FR"
+      },
+      "contact": {
+        "name": "Jessica",
+        "phone": "+596696334455",
+        "email": null
+      },
+      "instructions": null
+    },
+    "delivery": {
+      "address": {
+        "formatted": "Route de Balata, 97200 Fort-de-France",
+        "street": "Route de Balata",
+        "latitude": 14.645,
+        "longitude": -61.088,
+        "country": "FR"
+      },
+      "contact": {
+        "name": "Grand-mère Lucie",
+        "phone": "+596596640000",
+        "email": null
+      },
+      "instructions": null
+    },
+    "parcelCount": 1,
+    "size": "S",
+    "weightKg": null,
+    "deadlineAt": "2026-11-06T03:59:00.000Z",
+    "windowStart": null,
+    "windowEnd": null,
+    "hardConstraint": true,
+    "priority": 0,
+    "proofProfileId": "course",
+    "billingMode": "PER_ORDER",
+    "tourId": null,
+    "createdBy": "part-demo",
+    "createdAt": "2026-11-03T16:40:01.220Z",
+    "updatedAt": "2026-11-03T16:40:01.221Z",
+    "maxDays": 2,
+    "price": "{\"gridId\":\"grille-2026\",\"km\":6.6,\"lines\":[{\"label\":\"Prise en charge (taille S)\",\"amount\":5},{\"label\":\"6,60 km × 0,80 €\",\"amount\":5.28},{\"label\":\"Délai 2 jours (× 1,2)\",\"amount\":2.06}],\"total\":12.34,\"vat\":0.97,\"currency\":\"EUR\"}",
+    "priceTotal": 12.34,
+    "paymentIntentId": "pi_demo_a3b00d54",
+    "paymentStatus": "paid",
+    "paidAt": "2026-11-03T16:40:01.221Z"
+  },
+  "steps": [
+    {
+      "key": "PAID",
+      "label": "Demande payée",
+      "at": "2026-11-03T16:40:01.221Z"
+    },
+    {
+      "key": "PLANNED",
+      "label": "Planifiée",
+      "at": null
+    },
+    {
+      "key": "PICKED_UP",
+      "label": "Colis collecté",
+      "at": null
+    },
+    {
+      "key": "OUT_FOR_DELIVERY",
+      "label": "En cours de livraison",
+      "at": null
+    },
+    {
+      "key": "DELIVERED",
+      "label": "Livré",
+      "at": null
+    }
+  ],
+  "currentStep": "PAID",
+  "proofs": [],
+  "price": {
+    "gridId": "grille-2026",
+    "km": 6.6,
+    "lines": [
+      {
+        "label": "Prise en charge (taille S)",
+        "amount": 5
+      },
+      {
+        "label": "6,60 km × 0,80 €",
+        "amount": 5.28
+      },
+      {
+        "label": "Délai 2 jours (× 1,2)",
+        "amount": 2.06
+      }
+    ],
+    "total": 12.34,
+    "vat": 0.97,
+    "currency": "EUR"
+  },
+  "otpCode": "3945"
+}
