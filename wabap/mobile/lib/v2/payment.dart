@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 
 import '../colors.dart';
+import 'demo_hooks.dart';
 
 class Payment {
   /// Clé publique Stripe, fournie au build : --dart-define=STRIPE_PUBLISHABLE_KEY=pk_...
@@ -17,6 +18,7 @@ class Payment {
 
   /// Affiche le formulaire de paiement. Renvoie false si le client l'a fermé sans payer.
   static Future<bool> authorize(String clientSecret) async {
+    if (DemoHooks.pay != null) return DemoHooks.pay!(clientSecret);
     if (publishableKey.isEmpty) {
       throw Exception('Paiement non configuré dans cette version de l’app (STRIPE_PUBLISHABLE_KEY)');
     }

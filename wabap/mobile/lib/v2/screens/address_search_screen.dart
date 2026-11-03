@@ -21,7 +21,7 @@ class AddressSearchScreen extends StatefulWidget {
 }
 
 class _AddressSearchScreenState extends State<AddressSearchScreen> {
-  final _session = '${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(1 << 32)}';
+  final _session = '${DateTime.now().microsecondsSinceEpoch}${Random().nextInt(1 << 30)}';
   Timer? _debounce;
   List<PlaceSuggestion> _results = [];
   bool _loading = false;
@@ -31,7 +31,8 @@ class _AddressSearchScreenState extends State<AddressSearchScreen> {
   @override
   void initState() {
     super.initState();
-    Geolocator.getLastKnownPosition().then((p) => _here = p).catchError((_) => null);
+    // Future.sync : sur le web, la méthode lève une exception au lieu de renvoyer une erreur asynchrone
+    Future.sync(Geolocator.getLastKnownPosition).then((p) => _here = p).catchError((_) => null);
   }
 
   @override

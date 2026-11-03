@@ -67,7 +67,14 @@ const services = buildServices({
   log: { warn() {}, error: console.error, log() {} },
 });
 
+// Profils de l'app de démonstration (authentification par clé d'API simulée)
+const API_KEY_PERSONAS = {
+  'demo-client': { sub: 'part-demo', groups: [], claims: { email: 'jessica@exemple.fr', given_name: 'Jessica' } },
+  'demo-livreur': { sub: 'livreur-lea', groups: ['livreur'], claims: { email: 'lea@exemple.fr', given_name: 'Léa Marie-Sainte' } },
+};
+
 function identityFrom(headers) {
+  if (API_KEY_PERSONAS[headers['x-api-key']]) return API_KEY_PERSONAS[headers['x-api-key']];
   const auth = headers.authorization;
   if (!auth) return null;
   try {
@@ -103,13 +110,17 @@ function withRelations(model, item) {
 function rootFor(identity) {
   const root = {};
   const event = (fieldName, args) => ({ fieldName, arguments: args, identity: { sub: identity.sub, groups: identity.groups, claims: identity.claims } });
-  for (const op of Object.keys(OPERATIONS)) root[op] = (args) => handle(event(op, args), services);
   for (const [model, def] of Object.entries(models)) {
     root[`get${model}`] = async ({ id }) => withRelations(model, await store.get(model, id));
     root[`list${plural(model)}`] = async ({ filter }) => ({
       items: [...(store.tables[model]?.values() || [])].filter((x) => matches(x, filter)).map((x) => withRelations(model, x)), nextToken: null,
     });
-    for (const ix of def.indexes.filter((x) => x.queryField)) {
+    // Nom explicite (queryField) ou nom automatique d'Amplify : <modèles>By<Clé>And<Tri>
+    const cap = (x) => x[0].toUpperCase() + x.slice(1);
+    for (const ix of def.indexes) {
+      ix.queryField = ix.queryField || `${plural(model)[0].toLowerCase()}${plural(model).slice(1)}By${cap(ix.key)}${ix.sortKey ? `And${cap(ix.sortKey)}` : ''}`;
+    }
+    for (const ix of def.indexes) {
       root[ix.queryField] = async (args) => {
         const items = (await store.query(model, ix.name, ix.key, args[ix.key])).filter((x) => matches(x, args.filter));
         if (ix.sortKey) items.sort((a, b) => String(a[ix.sortKey]).localeCompare(String(b[ix.sortKey])) * (args.sortDirection === 'DESC' ? -1 : 1));
@@ -123,6 +134,8 @@ function rootFor(identity) {
     root[`update${model}`] = async ({ input }) => store.update(model, input.id, { ...input, updatedAt: new Date().toISOString() });
     root[`delete${model}`] = async ({ input }) => { const x = await store.get(model, input.id); await store.delete(model, input.id); return x; };
   }
+  // Opérations métier en dernier : elles priment sur les noms génériques (ex. updateCourierPosition)
+  for (const op of Object.keys(OPERATIONS)) root[op] = (args) => handle(event(op, args), services);
   return root;
 }
 
@@ -147,7 +160,7 @@ const server = http.createServer(async (req, res) => {
     const result = await graphql({ schema, source: query, rootValue: rootFor(identity), variableValues: variables });
     if (result.errors) {
       result.errors = result.errors.map((e) => ({ message: e.message, errorType: 'Lambda:Handled', path: e.path }));
-      console.log(`[GraphQL] ${result.errors.map((e) => e.message).join(' | ')}`);
+      console.log(`[GraphQL] ${result.errors.map((e) => `${(e.path || []).join('.')} : ${e.message}`).join(' | ')}`);
     }
     res.end(JSON.stringify(result));
   });

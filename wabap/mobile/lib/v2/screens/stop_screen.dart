@@ -10,6 +10,7 @@ import '../../colors.dart';
 import '../common.dart';
 import '../platform_api.dart';
 import '../platform_models.dart';
+import '../demo_hooks.dart';
 import '../proof_upload.dart';
 
 /// Collecte ou livraison d'un point (spec §5) : la validation n'est possible que lorsque
@@ -65,7 +66,9 @@ class _StopScreenState extends State<StopScreen> {
   }
 
   Future<void> _scan() async {
-    final code = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const _ScanPage()));
+    final code = DemoHooks.scan != null
+        ? await DemoHooks.scan!(widget.stop, _scanned.keys.toSet())
+        : await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const _ScanPage()));
     if (code == null) return;
     try {
       // Contrôle serveur : signature, client du point, colis attendu ou étiquette en réserve
@@ -85,11 +88,17 @@ class _StopScreenState extends State<StopScreen> {
   }
 
   Future<String?> _takePhoto(String kind) async {
-    final x = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 60, maxWidth: 1600);
-    if (x == null) return null;
+    final Uint8List? data;
+    if (DemoHooks.takePhoto != null) {
+      data = await DemoHooks.takePhoto!();
+    } else {
+      final x = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 60, maxWidth: 1600);
+      data = x == null ? null : await x.readAsBytes();
+    }
+    if (data == null) return null;
     setState(() => _busy = true);
     try {
-      return await ProofUpload.bytes(await x.readAsBytes(), tourId: widget.tourId, kind: kind);
+      return await ProofUpload.bytes(data, tourId: widget.tourId, kind: kind);
     } catch (e) {
       if (mounted) showError(context, 'Envoi de la photo impossible : $e');
       return null;

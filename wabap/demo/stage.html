@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Wabap — démo</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #171411;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: #fff; }
+  header { height: 112px; padding: 22px 44px 0; display: flex; align-items: center; gap: 20px; }
+  .logo { width: 54px; height: 54px; border-radius: 15px; background: #ff9500; display: grid; place-items: center; font-weight: 800; font-size: 30px; }
+  .titles h1 { margin: 0; font-size: 26px; font-weight: 800; }
+  .titles p { margin: 2px 0 0; color: #ffc77a; font-size: 15px; }
+  .caption { margin-left: auto; max-width: 1150px; background: #2a241d; border: 1px solid #4a3d2c; border-radius: 14px;
+    padding: 13px 20px; font-size: 21px; font-weight: 600; display: flex; gap: 14px; align-items: center; transition: opacity .25s; }
+  .caption .step { background: #ff9500; color: #1d1305; border-radius: 999px; padding: 3px 12px; font-size: 14px; font-weight: 800; white-space: nowrap; }
+  .stage { display: flex; gap: 36px; padding: 16px 44px 0; align-items: flex-start; }
+  .panel { display: flex; flex-direction: column; gap: 9px; }
+  .label { font-size: 14px; font-weight: 700; color: #ffc77a; text-transform: uppercase; letter-spacing: 1.2px; display: flex; gap: 8px; align-items: center; }
+  .label .dot { width: 9px; height: 9px; border-radius: 50%; background: #3ccf6a; box-shadow: 0 0 0 4px rgba(60,207,106,.2); }
+  .phone { width: 404px; height: 804px; border-radius: 46px; background: #050403; padding: 12px; box-shadow: 0 20px 60px rgba(0,0,0,.6), inset 0 0 0 2px #3b342c; transition: box-shadow .3s; }
+  .phone iframe { width: 380px; height: 780px; border: 0; border-radius: 34px; background: #f7f5f2; display: block; }
+  .browser { width: 960px; height: 804px; border-radius: 16px; background: #fff; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); transition: box-shadow .3s; }
+  .phone.focus, .browser.focus { box-shadow: 0 0 0 4px #ff9500, 0 20px 60px rgba(0,0,0,.6); }
+  .bar { height: 40px; background: #ece7df; display: flex; align-items: center; gap: 8px; padding: 0 14px; }
+  .bar i { width: 12px; height: 12px; border-radius: 50%; background: #f87171; display: inline-block; }
+  .bar i:nth-child(2) { background: #fbbf24; } .bar i:nth-child(3) { background: #34d399; }
+  .bar .url { margin-left: 12px; background: #fff; color: #6b6156; border-radius: 8px; padding: 4px 14px; font-size: 14px; flex: 1; }
+  .browser .viewport { width: 960px; height: 764px; overflow: hidden; }
+  .browser iframe { width: 1371px; height: 1091px; border: 0; transform: scale(.7); transform-origin: 0 0; }
+  .overlay { position: fixed; inset: 0; background: radial-gradient(circle at 30% 25%, #4a2c08, #171411 70%); display: flex;
+    flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: opacity .7s; z-index: 10; }
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .overlay .big { width: 112px; height: 112px; border-radius: 30px; background: #ff9500; display: grid; place-items: center; font-size: 62px; font-weight: 800; margin-bottom: 28px; box-shadow: 0 0 0 12px rgba(255,149,0,.18); }
+  .overlay h2 { font-size: 62px; margin: 0 0 14px; }
+  .overlay p { font-size: 25px; color: #ffe2b8; margin: 6px 0; max-width: 1300px; line-height: 1.4; }
+  .overlay .chips { margin-top: 34px; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 1400px; }
+  .overlay .chips span { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 10px 20px; font-size: 19px; }
+  .overlay .note { margin-top: 30px; font-size: 15px; color: #b9a891; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">W</div>
+    <div class="titles"><h1>Wabap</h1><p>Plateforme de livraison de colis B2B et B2C</p></div>
+    <div class="caption" id="caption"><span class="step" id="step">Démo</span><span id="text">Préparation…</span></div>
+  </header>
+  <div class="stage">
+    <div class="panel">
+      <div class="label"><span class="dot"></span>App mobile · Cliente</div>
+      <div class="phone" id="p-client"><iframe id="client" name="client" allow="geolocation"></iframe></div>
+    </div>
+    <div class="panel">
+      <div class="label"><span class="dot"></span>App mobile · Livreuse</div>
+      <div class="phone" id="p-courier"><iframe id="courier" name="courier" allow="geolocation"></iframe></div>
+    </div>
+    <div class="panel">
+      <div class="label"><span class="dot"></span>Back-office · <span id="weblabel">Exploitation</span></div>
+      <div class="browser" id="p-web">
+        <div class="bar"><i></i><i></i><i></i><span class="url" id="url">backoffice.wabap</span></div>
+        <div class="viewport"><iframe id="web" name="web"></iframe></div>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="overlay">
+    <div class="big">W</div>
+    <h2 id="ov-title">Wabap</h2>
+    <p id="ov-sub"></p>
+    <div class="chips" id="ov-chips"></div>
+    <div class="note" id="ov-note"></div>
+  </div>
+<script>
+  // Les actions automatisées font défiler les conteneurs parents : on garde la vue du navigateur fixe
+  for (const v of document.querySelectorAll('.viewport, .phone, .stage, body')) v.addEventListener('scroll', () => { v.scrollLeft = 0; v.scrollTop = 0; });
+  window.demo = {
+    caption(step, text) {
+      const c = document.getElementById('caption');
+      c.style.opacity = 0;
+      setTimeout(() => { document.getElementById('step').textContent = step; document.getElementById('text').textContent = text; c.style.opacity = 1; }, 250);
+    },
+    focus(id) { for (const el of document.querySelectorAll('.phone, .browser')) el.classList.toggle('focus', el.id === 'p-' + id); },
+    overlay(show, title, sub, chips = [], note = '') {
+      const o = document.getElementById('overlay');
+      if (title) document.getElementById('ov-title').textContent = title;
+      document.getElementById('ov-sub').innerHTML = sub || '';
+      document.getElementById('ov-chips').innerHTML = chips.map((c) => `<span>${c}</span>`).join('');
+      document.getElementById('ov-note').textContent = note;
+      o.classList.toggle('hidden', !show);
+    },
+    web(label, url) { document.getElementById('weblabel').textContent = label; document.getElementById('url').textContent = url; },
+  };
+</script>
+</body>
+</html>

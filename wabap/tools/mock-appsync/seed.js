@@ -172,9 +172,9 @@ async function run(s, store) {
   }
   await s.tours.recordPosition(asCourier(steeve), { latitude: 14.6110, longitude: -61.0700 });
 
-  // Aujourd'hui après-midi : tournée dédiée Enseigne, attribuée à Léa
+  // Aujourd'hui après-midi : tournée mutualisée attribuée à Léa (la démo y insère une course)
   const a = localIso(0, '14:00');
-  const tA = await s.tours.createTour(admin, { name: 'Enseigne Caraïbes · après-midi', date: a.day, slot: 'DAY', startTime: a.iso, start: depot, courierId: lea.sub, dedicatedCustomerId: 'ENSEIGNE' });
+  const tA = await s.tours.createTour(admin, { name: 'Fort-de-France · après-midi', date: a.day, slot: 'DAY', startTime: a.iso, start: depot, courierId: lea.sub });
   await s.tours.addOrders(admin, { tourId: tA.id, orderIds: [o.e5.id, o.e6.id] });
 
   // Brouillon pour demain
