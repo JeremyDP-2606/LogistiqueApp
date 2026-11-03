@@ -1,0 +1,14 @@
+@import "./base.css";
+
+.degrade {
+  background: linear-gradient(to bottom, #ff9500, #f26f00) !important;
+}
+
+tr.clickable:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Hack spécifique à Safari */
+_::-webkit-full-page-media, _:future, :root tr .v-ripple__container {
+  display: none !important;
+}

@@ -1,0 +1,74 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wabap-dev-171259-authRole",
+      "UnauthRoleArn": "arn:aws:iam::673747581604:role/amplify-wabap-dev-171259-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::673747581604:role/amplify-wabap-dev-171259-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-wabap-dev-171259-deployment",
+      "UnauthRoleName": "amplify-wabap-dev-171259-unauthRole",
+      "StackName": "amplify-wabap-dev-171259",
+      "StackId": "arn:aws:cloudformation:us-east-1:673747581604:stack/amplify-wabap-dev-171259/095758a0-4d91-11ee-a2c6-0e63052b8c3d",
+      "AmplifyAppId": "do863ppkyyc9g"
+    },
+    "categories": {
+      "auth": {
+        "wabapd447c9da": {},
+        "userPoolGroups": {}
+      },
+      "function": {
+        "createTournee": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/createTournee-4163314c7270546a4d54-build.zip"
+        },
+        "importCSV": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/importCSV-767a68694b5731566145-build.zip"
+        },
+        "importExcel": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/importExcel-4372644d537141454644-build.zip"
+        },
+        "listUsers": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/listUsers-6d715749475a56485757-build.zip"
+        },
+        "setAllOwner": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/setAllOwner-624575364a4f6b413151-build.zip"
+        },
+        "triggerColisStatus": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/triggerColisStatus-483434422b684959447a-build.zip"
+        },
+        "triggerMission": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/triggerMission-7a5161766a553930442b-build.zip"
+        },
+        "triggerTournee": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/triggerTournee-41504e6b657a594f692f-build.zip"
+        },
+        "updateMissionSubscribersId": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/updateMissionSubscribersId-2b753167507a4c30446c-build.zip"
+        },
+        "usersLambda": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/usersLambda-5641776962316b4e4452-build.zip"
+        },
+        "generateReport": {
+          "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
+          "s3Key": "amplify-builds/generateReport-367a35665a4131464565-build.zip"
+        }
+      },
+      "api": {
+        "apilambda": {},
+        "wabap": {}
+      },
+      "storage": {
+        "DEVtourneeContent": {}
+      }
+    }
+  }
+}

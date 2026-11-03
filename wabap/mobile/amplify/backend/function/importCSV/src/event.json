@@ -1,0 +1,10 @@
+{
+  "ftp": {
+    "host": "sftp.exemple.fr",
+    "port": "22",
+    "username": "UTILISATEUR",
+    "password": "MOT_DE_PASSE",
+    "filename": "[MAG650P_PORTIR_M2P_MAR_FA_]YYYYMMDD[.TXT]"
+  },
+  "clientName": "France-Antilles"
+}

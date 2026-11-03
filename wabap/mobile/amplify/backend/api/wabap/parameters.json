@@ -1,0 +1,12 @@
+{
+  "AppSyncApiName": "wabap",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authwabapd447c9da",
+      "Outputs.UserPoolId"
+    ]
+  },
+  "AuthModeLastUpdated": "2023-09-07T15:33:10.385Z"
+}

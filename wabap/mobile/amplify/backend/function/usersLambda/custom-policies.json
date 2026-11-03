@@ -1,0 +1,6 @@
+[
+  {
+    "Action": ["cognito-idp:*"],
+    "Resource": ["arn:aws:cognito-idp:us-east-1:673747581604:userpool/*"]
+  }
+]

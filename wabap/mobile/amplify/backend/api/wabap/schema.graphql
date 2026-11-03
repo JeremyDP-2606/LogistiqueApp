@@ -1,0 +1,147 @@
+type Subscriber @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap"] },
+    { allow: owner, identityClaim: "custom:clientName" }
+  ])
+{
+  id: ID!
+  owner: String! @default(value: "France-Antilles")
+  name: String!
+  address: String
+  numabo: String
+  secteur: String
+  phone1: String
+  phone2: String
+  instructions: String
+  longitude: Float
+  latitude: Float
+  mission: Mission @belongsTo
+  colis: [Colis] @hasMany
+  type: String! @index(name: "subscriberOrderName", queryField: "subscriberOrderName", sortKeyFields: ["name"])
+  nb: Int!
+  unsubscribed: Boolean
+}
+
+type Mission @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap"] },
+    { allow: owner, identityClaim: "custom:clientName" }
+  ])
+{
+  id: ID!
+  owner: String! @default(value: "France-Antilles")
+  name: String!
+  subscribers: [Subscriber] @hasMany
+  livreurID: ID!
+  inscriptions: [Inscription] @hasMany
+  startName: String
+  startLongitude: Float!
+  startLatitude: Float!
+  daysOfWeek: [Boolean!]
+  generateDayBefore: Boolean
+  startTime: Float
+  startTimeZone: String
+  tournee: [Tournee] @hasMany
+}
+
+type Inscription @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap"] },
+    { allow: owner, identityClaim: "custom:clientName" },
+    { allow: owner, identityClaim: "sub", ownerField: "livreurID" }
+  ])
+{
+  id: ID!
+  owner: String @default(value: "France-Antilles")
+  mission: Mission @belongsTo
+  livreurID: ID!
+}
+
+type Tournee @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap"] }
+    { allow: owner, identityClaim: "custom:clientName" },
+    { allow: owner, identityClaim: "sub", ownerField: "livreurID", operations: [read, update] }
+  ])
+{
+  id: ID!
+  owner: String! @default(value: "France-Antilles")
+  name: String!
+  status: Status!
+  colis: [Colis!]! @hasMany
+  startName: String
+  startLongitude: Float!
+  startLatitude: Float!
+  livreurID: ID! @index(name: "byLivreurOrderDate", queryField: "byLivreurOrderDate", sortKeyFields: ["createdAt"])
+  missionTourneeId: ID! @index(name: "byMissionOrderDate", queryField: "byMissionOrderDate", sortKeyFields: ["createdAt"])
+  mission: Mission!  @belongsTo(fields: ["missionTourneeId"])
+  createdAt: AWSDateTime!
+  distance: Int
+  duree: Int
+  nbColis: Int
+}
+
+type Colis @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap"] },
+    { allow: owner, identityClaim: "custom:clientName" }
+  ])
+{
+  id: ID!
+  owner: String @default(value: "France-Antilles")
+  tournee: Tournee! @belongsTo(fields: ["tourneeColisId"])
+  tourneeColisId: ID! @index(name: "byTourneeOrderPosition", queryField: "byTourneeOrderPosition", sortKeyFields: ["position"])
+  subscriber: Subscriber @belongsTo(fields: ["subscriberColisId"])
+  subscriberColisId: ID @index(name: "bySubscriberOrderDate", queryField: "bySubscriberOrderDate", sortKeyFields: ["createdAt"])
+  createdAt: AWSDateTime!
+  position: Int!
+  polyline: String
+  distance: Int
+  duration: Int
+  address: String!
+  longitude: Float!
+  latitude: Float!
+  subscriberName: String!
+  lastStatus: ColisStatus! @hasOne
+  logs: [ColisStatus!]! @hasMany
+}
+
+type ColisStatus @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap"] },
+    { allow: owner, identityClaim: "custom:clientName" }
+  ])
+{
+  id: ID!
+  owner: String @default(value: "France-Antilles")
+  colis: Colis @belongsTo(fields: ["colisLogsId"])
+  colisLogsId: ID! @index(name: "byColisOrderDate", queryField: "byColisOrderDate", sortKeyFields: ["createdAt"])
+  status: Status!
+  message: String
+  createdAt: AWSDateTime!
+  longitude: Float
+  latitude: Float
+}
+
+enum Status {
+  PENDING
+  IN_PROGRESS
+  ISSUE
+  COMPLETED
+}
+
+type Location @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap"] },
+    { allow: owner, identityClaim: "custom:clientName" }
+  ])
+{
+  id: ID!
+  owner: String @default(value: "France-Antilles")
+  userId: ID!
+  userName: String
+  tourneeId: String!
+  latitude: Float!
+  longitude: Float!
+  lastUpdate: AWSDateTime!
+}

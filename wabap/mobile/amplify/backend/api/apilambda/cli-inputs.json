@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "paths": {
+    "/users": {
+      "name": "/users",
+      "lambdaFunction": "listUsers",
+      "permissions": {
+        "groups": {
+          "admin": [
+            "read"
+          ]
+        },
+        "setting": "private"
+      }
+    }
+  }
+}

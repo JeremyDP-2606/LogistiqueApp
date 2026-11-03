@@ -1,0 +1,102 @@
+[
+  {
+    "groupName": "wabap",
+    "precedence": 1,
+    "customPolicies": [
+      {
+        "PolicyName": "admin-group-policy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:InvokeFunction",
+                "execute-api:Invoke"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cognito-idp:ListUsers",
+                "cognito-idp:AdminListGroupsForUser",
+                "cognito-idp:AdminDeleteUser",
+                "cognito-idp:AdminUpdateUserAttributes",
+                "cognito-idp:AdminCreateUser",
+                "cognito-idp:AdminAddUserToGroup"
+              ],
+              "Resource": [
+                "arn:aws:cognito-idp:us-east-1:673747581604:userpool/*"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "groupName": "admin",
+    "precedence": 2,
+    "customPolicies": [
+      {
+        "PolicyName": "admin-group-policy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "lambda:InvokeFunction",
+                "execute-api:Invoke"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cognito-idp:ListUsers",
+                "cognito-idp:AdminListGroupsForUser",
+                "cognito-idp:AdminDeleteUser",
+                "cognito-idp:AdminUpdateUserAttributes",
+                "cognito-idp:AdminCreateUser",
+                "cognito-idp:AdminAddUserToGroup"
+              ],
+              "Resource": [
+                "arn:aws:cognito-idp:us-east-1:673747581604:userpool/*"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "groupName": "client",
+    "precedence": 3,
+    "customPolicies": [
+      {
+        "PolicyName": "admin-group-policy",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cognito-idp:ListUsers",
+                "cognito-idp:AdminListGroupsForUser"
+              ],
+              "Resource": [
+                "arn:aws:cognito-idp:us-east-1:673747581604:userpool/*"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "groupName": "livreur",
+    "precedence": 4
+  }
+]

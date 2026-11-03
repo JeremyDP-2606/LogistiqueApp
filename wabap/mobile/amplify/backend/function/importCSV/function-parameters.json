@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "api": {
+      "wabap": [
+        "Query",
+        "Mutation"
+      ]
+    }
+  },
+  "lambdaLayers": [],
+  "environmentVariableList": []
+}
