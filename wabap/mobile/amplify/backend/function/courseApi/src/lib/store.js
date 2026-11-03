@@ -25,8 +25,10 @@ function createDynamoStore({ apiId, env, region }) {
       Object.entries(patch).forEach(([k, v], i) => { names[`#s${i}`] = k; values[`:s${i}`] = v; sets.push(`#s${i} = :s${i}`); });
       Object.entries(expect).forEach(([k, v], i) => {
         names[`#c${i}`] = k;
-        if (v === null) conds.push(`(attribute_not_exists(#c${i}) OR #c${i} = :null)`), (values[':null'] = null);
-        else if (Array.isArray(v)) {
+        if (v === null) {
+          values[':null'] = null;
+          conds.push(`(attribute_not_exists(#c${i}) OR #c${i} = :null)`);
+        } else if (Array.isArray(v)) {
           const keys = v.map((x, j) => { values[`:c${i}_${j}`] = x; return `:c${i}_${j}`; });
           conds.push(`#c${i} IN (${keys.join(', ')})`);
         } else { values[`:c${i}`] = v; conds.push(`#c${i} = :c${i}`); }
