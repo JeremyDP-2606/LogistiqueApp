@@ -2,7 +2,7 @@
 // Kilométrage retenu : celui de l'itinéraire optimisé (estimé), jamais la trace GPS.
 // Chaque tronçon est payé au tarif du créneau (jour / nuit) de son heure, et au tarif du type de client
 // selon la règle de répartition des tournées mutualisées.
-const { round2 } = require('./geo');
+const { round2, fr } = require('./geo');
 const { UserError, isFinance } = require('./orders');
 
 const DEFAULT_RATE_GRID = {
@@ -76,21 +76,21 @@ function computeEarning(tour, stops, grid, { tzOffsetMinutes = -240 } = {}) {
       const typeKm = round2((km * w) / totalW);
       const amount = round2(typeKm * rate(type, slot));
       kmAmount += amount;
-      lines.push({ kind: 'KM', label: `${typeKm} km ${slot === 'NIGHT' ? 'de nuit' : 'de jour'} · ${type === 'default' ? 'tous clients' : type} × ${rate(type, slot).toFixed(2)} €`, km: typeKm, slot, customerTypeId: type, amount });
+      lines.push({ kind: 'KM', label: `${fr(typeKm)} km ${slot === 'NIGHT' ? 'de nuit' : 'de jour'} · ${type === 'default' ? 'tous clients' : type} × ${fr(rate(type, slot))} €`, km: typeKm, slot, customerTypeId: type, amount });
     }
   }
   let total = kmAmount;
   const doneStops = stops.filter((s) => ['DONE', 'PARTIAL'].includes(s.status)).length;
-  if (g.perStop && doneStops) { const a = round2(doneStops * g.perStop); total += a; lines.push({ kind: 'STOP', label: `${doneStops} point(s) × ${g.perStop.toFixed(2)} €`, amount: a }); }
+  if (g.perStop && doneStops) { const a = round2(doneStops * g.perStop); total += a; lines.push({ kind: 'STOP', label: `${doneStops} point(s) × ${fr(g.perStop)} €`, amount: a }); }
   const delivered = stops.flatMap((s) => s.parcels).filter((p) => p.delivered);
-  if (g.perParcel && delivered.length) { const a = round2(delivered.length * g.perParcel); total += a; lines.push({ kind: 'PARCEL', label: `${delivered.length} colis × ${g.perParcel.toFixed(2)} €`, amount: a }); }
+  if (g.perParcel && delivered.length) { const a = round2(delivered.length * g.perParcel); total += a; lines.push({ kind: 'PARCEL', label: `${delivered.length} colis × ${fr(g.perParcel)} €`, amount: a }); }
   const heavy = delivered.filter((p) => p.weightKg && p.weightKg >= g.heavyParcelKg).length;
-  if (g.heavyParcelBonus && heavy) { const a = round2(heavy * g.heavyParcelBonus); total += a; lines.push({ kind: 'HEAVY', label: `${heavy} colis lourd(s) × ${g.heavyParcelBonus.toFixed(2)} €`, amount: a }); }
+  if (g.heavyParcelBonus && heavy) { const a = round2(heavy * g.heavyParcelBonus); total += a; lines.push({ kind: 'HEAVY', label: `${heavy} colis lourd(s) × ${fr(g.heavyParcelBonus)} €`, amount: a }); }
   if (g.weekendPercent && isWeekend(tour.startTime, tzOffsetMinutes)) {
     const a = round2((kmAmount * g.weekendPercent) / 100); total += a; lines.push({ kind: 'WEEKEND', label: `Majoration week-end (+${g.weekendPercent} %)`, amount: a });
   }
   if (g.minimumPerTour && total < g.minimumPerTour) {
-    lines.push({ kind: 'MINIMUM', label: `Minimum par tournée (${g.minimumPerTour} €)`, amount: round2(g.minimumPerTour - total) });
+    lines.push({ kind: 'MINIMUM', label: `Minimum par tournée (${fr(g.minimumPerTour)} €)`, amount: round2(g.minimumPerTour - total) });
     total = g.minimumPerTour;
   }
   return { gridId: g.id, km: round2(totalKm), lines, amount: round2(total) };

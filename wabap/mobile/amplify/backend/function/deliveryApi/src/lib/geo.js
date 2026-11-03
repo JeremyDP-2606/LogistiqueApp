@@ -14,4 +14,7 @@ const roadKm = (a, b) => (distanceMeters(a, b) / 1000) * ROAD_FACTOR;
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
-module.exports = { distanceMeters, roadKm, round2, ROAD_FACTOR };
+// Nombre au format français pour les libellés (« 6,85 », « 0,55 »)
+const fr = (n, decimals = 2) => Number(n).toFixed(decimals).replace('.', ',');
+
+module.exports = { distanceMeters, roadKm, round2, fr, ROAD_FACTOR };

@@ -2,7 +2,7 @@
 // Prix = max(minimum, (prise en charge[taille] + km × prix/km[taille]) × coef[délai]) + suppléments − remise
 // La grille est historisée : la grille en vigueur est la plus récente dont la date d'effet est passée,
 // et une course déjà payée garde le prix calculé au moment de la commande.
-const { round2 } = require('./geo');
+const { round2, fr } = require('./geo');
 
 // Exemples de la spec (« à remplacer »), utilisés tant qu'aucune grille n'est publiée
 const DEFAULT_GRID = {
@@ -58,11 +58,11 @@ function priceCourse(grid, km, input, promo = null) {
   const pickupFee = size.base;
   const kmFee = round2(km * size.perKm);
   lines.push({ label: `Prise en charge (taille ${input.size})`, amount: pickupFee });
-  lines.push({ label: `${round2(km)} km × ${size.perKm.toFixed(2)} €`, amount: kmFee });
+  lines.push({ label: `${fr(km)} km × ${fr(size.perKm)} €`, amount: kmFee });
   let price = (pickupFee + kmFee) * coef;
-  if (coef !== 1) lines.push({ label: `Délai ${input.maxDays} jour${input.maxDays > 1 ? 's' : ''} (× ${coef})`, amount: round2(price - pickupFee - kmFee) });
+  if (coef !== 1) lines.push({ label: `Délai ${input.maxDays} jour${input.maxDays > 1 ? 's' : ''} (× ${String(coef).replace('.', ',')})`, amount: round2(price - pickupFee - kmFee) });
   if (price < g.minimum) {
-    lines.push({ label: `Minimum par course (${g.minimum} €)`, amount: round2(g.minimum - price) });
+    lines.push({ label: `Minimum par course (${fr(g.minimum)} €)`, amount: round2(g.minimum - price) });
     price = g.minimum;
   }
   const o = input.options || {};

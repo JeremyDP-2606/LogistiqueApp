@@ -1,0 +1,8 @@
+{
+  "name": "wabap-mock-appsync",
+  "private": true,
+  "description": "Outil de développement : AppSync simulé qui exécute la vraie fonction deliveryApi en mémoire",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "graphql": "16.9.0" }
+}
