@@ -42,6 +42,13 @@ test('requêtes DynamoDB construites par le store', { skip: !available && 'SDK n
   assert.equal(q.KeyConditionExpression, '#k = :k AND #s = :s');
   assert.deepEqual(q.ExpressionAttributeValues, { ':k': 'ddgwm', ':s': 'PENDING' });
 
+  // Suppression et requête par plage (dates)
+  await store.delete('Stop', 's1');
+  assert.deepEqual(sent.at(-1).input, { TableName: 'Stop-abc-dev', Key: { id: 's1' } });
+  reply.value = { Items: [] };
+  await store.query('ParcelEvent', 'byDay', 'day', '2026-11-04', { sortKey: 'at', sortValue: ['2026-11-04T00:00', '2026-11-04T23:59'] });
+  assert.equal(sent.at(-1).input.KeyConditionExpression, '#k = :k AND #s BETWEEN :s1 AND :s2');
+
   // La sérialisation réelle (marshalling) accepte ces valeurs, y compris null et les objets imbriqués
   const { marshall } = require(require.resolve('@aws-sdk/util-dynamodb', { paths: [sdkDir] }));
   assert.ok(marshall(u.ExpressionAttributeValues, { removeUndefinedValues: true })[':null'].NULL);

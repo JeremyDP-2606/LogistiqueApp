@@ -9,8 +9,13 @@ class UserError extends Error {}
 const SIZES = ['S', 'M', 'L', 'XL'];
 const SOURCES = ['CLIENT_APP', 'API', 'IMPORT', 'MANUAL'];
 
+// Rôles (spec §2) : wabap = super administrateur, admin, dispatch = dispatcher / exploitant, finance = comptable
 function isStaff(identity) {
   return ['admin', 'wabap', 'dispatch'].some((g) => identity.groups.includes(g));
+}
+
+function isFinance(identity) {
+  return ['admin', 'wabap', 'finance'].some((g) => identity.groups.includes(g));
 }
 
 // Un particulier ou un pro occasionnel n'a pas d'organisation : son « client » est son compte
@@ -250,4 +255,4 @@ function createOrders(ctx) {
   return { ingest, fix, addEvent, history, createParcels, parcelsOf, normalizePoint };
 }
 
-module.exports = { createOrders, UserError, isStaff, customerIdFor, SIZES };
+module.exports = { createOrders, UserError, isStaff, isFinance, customerIdFor, SIZES };

@@ -46,7 +46,9 @@
       "wabap",
       "admin",
       "client",
-      "livreur"
+      "livreur",
+      "dispatch",
+      "finance"
     ],
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,

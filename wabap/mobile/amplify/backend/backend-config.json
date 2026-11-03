@@ -205,7 +205,7 @@
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
     },
-    "courseApi": {
+    "deliveryApi": {
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"

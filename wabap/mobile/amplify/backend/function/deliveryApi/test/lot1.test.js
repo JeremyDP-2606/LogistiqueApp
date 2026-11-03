@@ -326,3 +326,14 @@ test('vue client cloisonnée : uniquement ses points, position du livreur tant q
   assert.equal((await env.tours.clientView(garage, { tourId: tour.id })).courier, null, 'plus de position une fois ses points faits');
   await assert.rejects(env.tours.clientView({ sub: 'x', groups: ['client'], clientName: 'AUTRE' }, { tourId: tour.id }), /introuvable/);
 });
+
+test('position du livreur : seulement pendant une tournée en cours (RGPD), trace conservée', async () => {
+  const env = await setup();
+  await assert.rejects(env.tours.recordPosition(courier, { latitude: 14.6, longitude: -61.0 }), /Aucune tournée en cours/);
+  const { tour } = await plannedTour(env);
+  await env.tours.start(courier, { tourId: tour.id });
+  const r = await env.tours.recordPosition(courier, { latitude: 14.6, longitude: -61.0 });
+  assert.equal(r.tourId, tour.id);
+  assert.equal((await env.store.get('CourierPosition', courier.sub)).latitude, 14.6);
+  assert.equal((await env.store.query('TracePoint', 'byTour', 'tourId', tour.id)).length, 1);
+});

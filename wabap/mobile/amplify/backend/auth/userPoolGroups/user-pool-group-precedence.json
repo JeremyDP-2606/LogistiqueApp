@@ -98,5 +98,13 @@
   {
     "groupName": "livreur",
     "precedence": 4
+  },
+  {
+    "groupName": "dispatch",
+    "precedence": 5
+  },
+  {
+    "groupName": "finance",
+    "precedence": 6
   }
 ]

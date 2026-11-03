@@ -89,6 +89,7 @@ test('de la clôture au paiement : gain à valider, ajustement motivé, relevé 
   assert.equal(e.status, 'TO_VALIDATE');
   assert.equal(e.amount, est.amount, 'payé sur le km estimé, comme annoncé');
   await assert.rejects(earnings.adjust(admin, { tourId: tour.id, amount: 3 }), /motif/);
+  await assert.rejects(earnings.validate({ sub: 'd', groups: ['dispatch'] }, { tourId: tour.id }), /comptabilité/);
   const adj = await earnings.adjust(admin, { tourId: tour.id, amount: 3, reason: 'Attente au dépôt' });
   assert.equal(adj.amount, Math.round((est.amount + 3) * 100) / 100);
   await assert.rejects(earnings.markPaid(admin, { courierId: courier.sub, month: '2026-11' }), /Validez/);

@@ -3,7 +3,7 @@
 // Chaque tronçon est payé au tarif du créneau (jour / nuit) de son heure, et au tarif du type de client
 // selon la règle de répartition des tournées mutualisées.
 const { round2 } = require('./geo');
-const { UserError, isStaff } = require('./orders');
+const { UserError, isFinance } = require('./orders');
 
 const DEFAULT_RATE_GRID = {
   id: 'defaut',
@@ -100,7 +100,7 @@ function createEarnings(ctx) {
   const { store } = ctx;
   const tz = ctx.config?.tzOffsetMinutes ?? -240;
   const iso = () => (ctx.now ? ctx.now() : new Date()).toISOString();
-  const requireStaff = (identity) => { if (!isStaff(identity)) throw new UserError('Réservé aux équipes Wabap'); };
+  const requireStaff = (identity) => { if (!isFinance(identity)) throw new UserError('Réservé à la comptabilité Wabap'); };
 
   async function gridFor(tour) {
     return gridAt(await store.query('RateGrid', 'byKind', 'kind', 'COURIER'), tour.startTime);
@@ -174,7 +174,7 @@ function createEarnings(ctx) {
 
   // Relevé mensuel d'un livreur (spec §9.3)
   async function statement(identity, { courierId, month }) {
-    if (!isStaff(identity) && identity.sub !== courierId) throw new UserError('Relevé introuvable');
+    if (!isFinance(identity) && identity.sub !== courierId) throw new UserError('Relevé introuvable');
     const items = (await store.query('TourEarning', 'byCourier', 'courierId', courierId)).filter((e) => e.month === month)
       .sort((a, b) => a.date.localeCompare(b.date));
     const id = `${courierId}-${month}`;

@@ -519,7 +519,21 @@ function createTours(ctx, orders) {
     };
   }
 
+  // ---------- Position du livreur (spec §8) ----------
+  // Uniquement pendant une tournée active (RGPD) ; trace conservée pour le contrôle et les litiges, jamais pour la paie.
+  async function recordPosition(identity, { latitude, longitude }) {
+    const lat = Number(latitude), lng = Number(longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) throw new UserError('Position invalide');
+    const active = (await store.query('Tour', 'byCourier', 'courierId', identity.sub)).find((t) => t.status === 'IN_PROGRESS');
+    if (!active) throw new UserError('Aucune tournée en cours : la position n’est pas enregistrée');
+    const at = iso();
+    await store.put('CourierPosition', { __typename: 'CourierPosition', id: identity.sub, courierId: identity.sub, tourId: active.id, latitude: lat, longitude: lng, at, createdAt: at, updatedAt: at });
+    await store.put('TracePoint', { __typename: 'TracePoint', id: crypto.randomUUID(), tourId: active.id, courierId: identity.sub, latitude: lat, longitude: lng, at, createdAt: at, updatedAt: at });
+    return { tourId: active.id, courierId: identity.sub, latitude: lat, longitude: lng, at };
+  }
+
   return {
+    recordPosition,
     createTour, addOrders, removeOrder, lockStop, optimize, assign, accept, start,
     courierView, scan, submitStop, failStop, close, clientView, stopsOf, stopRequirements, buildStops,
   };
