@@ -145,3 +145,292 @@ type Location @model
   longitude: Float!
   lastUpdate: AWSDateTime!
 }
+
+# =====================================================================
+# Wabap V2 : courses à la demande, ouvertes à tous
+# Les modèles V1 ci-dessus sont inchangés.
+# Toutes les écritures passent par la fonction courseApi (règles métier,
+# paiement, conditions anti-doublon) : les mutations générées sont désactivées.
+# =====================================================================
+
+enum CourseStatus {
+  AWAITING_PAYMENT
+  PENDING
+  ASSIGNED
+  PICKING_UP
+  PICKED_UP
+  DELIVERING
+  COMPLETED
+  ISSUE
+  CANCELLED
+}
+
+enum Vehicle {
+  BIKE
+  MOTORBIKE
+  CAR
+  VAN
+}
+
+enum PackageSize {
+  S
+  M
+  L
+  XL
+}
+
+enum Urgency {
+  STANDARD
+  EXPRESS
+}
+
+enum PaymentMode {
+  CARD
+  INVOICE
+}
+
+type CourseStop {
+  address: String!
+  latitude: Float!
+  longitude: Float!
+  contactName: String
+  phone: String
+  instructions: String
+}
+
+type Course @model(mutations: null, subscriptions: null)
+  @auth(rules: [
+    { allow: groups, groups: ["wabap", "admin"] },
+    { allow: owner, ownerField: "clientId", identityClaim: "sub", operations: [read] },
+    { allow: owner, ownerField: "courierId", identityClaim: "sub", operations: [read] },
+    { allow: owner, identityClaim: "custom:clientName", operations: [read] }
+  ])
+{
+  id: ID!
+  ref: String!
+  "Organisation du client professionnel (vide pour un particulier)"
+  owner: String
+  clientId: ID! @index(name: "byClient", queryField: "coursesByClient", sortKeyFields: ["createdAt"])
+  clientName: String
+  courierId: ID @index(name: "byCourier", queryField: "coursesByCourier", sortKeyFields: ["createdAt"])
+  courierName: String
+  courierPhone: String
+  courierVehicle: Vehicle
+  courierRating: Float
+  status: CourseStatus! @index(name: "byStatus", queryField: "coursesByStatus", sortKeyFields: ["createdAt"])
+  "Geohash précision 5 du retrait (recherche des courses proches)"
+  zone: String! @index(name: "byZone", sortKeyFields: ["status"])
+  "Geohash précision 4 du retrait (abonnement temps réel des livreurs)"
+  area: String!
+  pickup: CourseStop!
+  dropoff: CourseStop!
+  packageSize: PackageSize!
+  packageDescription: String
+  urgency: Urgency!
+  vehicle: Vehicle!
+  distanceKm: Float!
+  etaMinutes: Int
+  priceHt: Float!
+  priceTva: Float!
+  priceTtc: Float!
+  courierEarning: Float!
+  paymentMode: PaymentMode!
+  paymentIntentId: String
+  paymentStatus: String
+  codeAttempts: Int
+  reason: String
+  ratingStars: Int
+  ratingComment: String
+  "Calculé par availableCourses"
+  distanceToPickupKm: Float
+  events: [CourseEvent] @hasMany(indexName: "byCourse", fields: ["id"])
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+"Code de remise : lisible seulement par le client qui a commandé, jamais diffusé aux livreurs"
+type CourseSecret @model(mutations: null, subscriptions: null)
+  @auth(rules: [
+    { allow: owner, ownerField: "clientId", identityClaim: "sub", operations: [read] },
+    { allow: groups, groups: ["wabap", "admin"], operations: [read] }
+  ])
+{
+  id: ID!
+  clientId: ID!
+  deliveryCode: String!
+}
+
+type CourseEvent @model(mutations: null, subscriptions: null)
+  @auth(rules: [
+    { allow: groups, groups: ["wabap", "admin"] },
+    { allow: owner, ownerField: "clientId", identityClaim: "sub", operations: [read] },
+    { allow: owner, ownerField: "courierId", identityClaim: "sub", operations: [read] }
+  ])
+{
+  id: ID!
+  courseId: ID! @index(name: "byCourse", sortKeyFields: ["createdAt"])
+  clientId: ID!
+  courierId: ID
+  status: CourseStatus!
+  message: String
+  latitude: Float
+  longitude: Float
+  createdAt: AWSDateTime!
+}
+
+type CourierProfile @model(mutations: null, subscriptions: null)
+  @auth(rules: [
+    { allow: groups, groups: ["wabap", "admin"] },
+    { allow: owner, ownerField: "courierId", identityClaim: "sub", operations: [read] }
+  ])
+{
+  "Identique au sub Cognito du livreur"
+  id: ID!
+  courierId: ID!
+  name: String
+  phone: String
+  vehicle: Vehicle!
+  online: Boolean!
+  zone: String
+  latitude: Float
+  longitude: Float
+  lastSeen: AWSDateTime
+  rating: Float!
+  ratingsCount: Int!
+  activeCourseId: ID
+}
+
+"Grille tarifaire : id = « default » ou nom de l'organisation (custom:clientName)"
+type Tarif @model
+  @auth(rules: [
+    { allow: groups, groups: ["wabap", "admin"] },
+    { allow: private, operations: [read] }
+  ])
+{
+  id: ID!
+  "[{ vehicle, base, perKm, maxKm, maxSize, speedKmh }]"
+  vehicles: AWSJSON!
+  expressMultiplier: Float!
+  vatRate: Float!
+  courierShare: Float!
+  "Client professionnel facturé au mois (pas de paiement par carte)"
+  invoice: Boolean
+}
+
+input CourseStopInput {
+  address: String!
+  latitude: Float!
+  longitude: Float!
+  contactName: String
+  phone: String
+  instructions: String
+}
+
+input CreateCourseInput {
+  pickup: CourseStopInput!
+  dropoff: CourseStopInput!
+  packageSize: PackageSize!
+  urgency: Urgency!
+  vehicle: Vehicle
+  packageDescription: String
+}
+
+type QuoteOption @aws_cognito_user_pools {
+  vehicle: Vehicle!
+  etaMinutes: Int!
+  priceHt: Float!
+  priceTva: Float!
+  priceTtc: Float!
+  courierEarning: Float!
+}
+
+type CourseQuote @aws_cognito_user_pools {
+  distanceKm: Float!
+  options: [QuoteOption!]!
+}
+
+type CreateCourseResult @aws_cognito_user_pools {
+  course: Course!
+  "À passer au formulaire de paiement Stripe (vide en facturation mensuelle)"
+  paymentClientSecret: String
+  deliveryCode: String!
+}
+
+type CourierPosition @aws_cognito_user_pools {
+  courseId: ID
+  courierId: ID!
+  latitude: Float!
+  longitude: Float!
+  at: AWSDateTime!
+}
+
+type EarningsTotal @aws_cognito_user_pools {
+  count: Int!
+  amount: Float!
+  distanceKm: Float
+}
+
+type EarningsLine @aws_cognito_user_pools {
+  courseId: ID!
+  ref: String!
+  amount: Float!
+  distanceKm: Float!
+  at: AWSDateTime!
+  dropoffAddress: String
+}
+
+type CourierEarnings @aws_cognito_user_pools {
+  today: EarningsTotal!
+  week: EarningsTotal!
+  total: EarningsTotal!
+  rating: Float!
+  recent: [EarningsLine!]!
+}
+
+type Query {
+  quoteCourse(pickup: CourseStopInput!, dropoff: CourseStopInput!, packageSize: PackageSize!, urgency: Urgency!): CourseQuote
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools
+  availableCourses: [Course!]
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools(cognito_groups: ["livreur"])
+  courierEarnings: CourierEarnings
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools(cognito_groups: ["livreur"])
+}
+
+type Mutation {
+  createCourse(input: CreateCourseInput!): CreateCourseResult
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools
+  confirmCoursePayment(courseId: ID!): Course
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools
+  acceptCourse(courseId: ID!): Course
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools(cognito_groups: ["livreur"])
+  updateCourseStep(courseId: ID!, status: CourseStatus!, code: String, reason: String): Course
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools(cognito_groups: ["livreur"])
+  cancelCourse(courseId: ID!, reason: String): Course
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools
+  rateCourse(courseId: ID!, stars: Int!, comment: String): Course
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools
+  setCourierAvailability(online: Boolean!, vehicle: Vehicle): CourierProfile
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools(cognito_groups: ["livreur"])
+  updateCourierPosition(latitude: Float!, longitude: Float!): CourierPosition
+    @function(name: "courseApi-${env}") @aws_cognito_user_pools(cognito_groups: ["livreur"])
+}
+
+# Temps réel. Les abonnements reçoivent la réponse des mutations ci-dessus.
+type Subscription {
+  "Suivi d'une course par le client (identifiant obligatoire)"
+  onCourseChanged(id: ID!): Course
+    @aws_subscribe(mutations: ["confirmCoursePayment", "acceptCourse", "updateCourseStep", "cancelCourse", "rateCourse"])
+    @aws_cognito_user_pools
+  "Nouvelle course payée dans la zone d'un livreur"
+  onCourseAvailable(area: String!): Course
+    @aws_subscribe(mutations: ["confirmCoursePayment"])
+    @aws_cognito_user_pools(cognito_groups: ["livreur"])
+  "Course acceptée ou annulée : à retirer des listes des autres livreurs"
+  onCourseTaken(area: String!): Course
+    @aws_subscribe(mutations: ["acceptCourse", "cancelCourse"])
+    @aws_cognito_user_pools(cognito_groups: ["livreur"])
+  "Position du livreur pendant une course"
+  onCourierPosition(courseId: ID!): CourierPosition
+    @aws_subscribe(mutations: ["updateCourierPosition"])
+    @aws_cognito_user_pools
+}

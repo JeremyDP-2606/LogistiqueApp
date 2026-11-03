@@ -60,6 +60,9 @@
         "generateReport": {
           "deploymentBucketName": "amplify-wabap-dev-171259-deployment",
           "s3Key": "amplify-builds/generateReport-367a35665a4131464565-build.zip"
+        },
+        "courseApi": {
+          "graphqlApiId": "zjcggzi525bflmgm35w7dji5ui"
         }
       },
       "api": {

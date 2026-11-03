@@ -1,0 +1,11 @@
+{
+  "name": "courseapi",
+  "version": "1.0.0",
+  "description": "Wabap V2 : courses à la demande (résolveur AppSync)",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "test": "node --test ../test/*.test.js"
+  }
+}
