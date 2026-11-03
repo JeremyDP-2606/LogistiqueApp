@@ -1,5 +1,6 @@
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:wabap/v2/screens/signup_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:wabap/colors.dart';
@@ -154,6 +155,15 @@ class LoginScreen extends ConsumerWidget {
                                 "Connecter",
                                 style: TextStyle(color: C.primary, fontSize: 18),
                               ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () => Navigator.of(context)
+                            .push(MaterialPageRoute(builder: (_) => const SignUpScreen())),
+                        child: const Text(
+                          "Pas encore de compte ? Créer un compte",
+                          style: TextStyle(color: C.white, fontSize: 15, decoration: TextDecoration.underline, decorationColor: C.white),
+                        ),
                       ),
                     ],
                   ),

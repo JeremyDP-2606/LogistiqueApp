@@ -12,6 +12,9 @@ import 'package:wabap/screen/splash_screen.dart';
 import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:wabap/services/colis_status_sync_service.dart';
 
+import 'package:wabap/v2/payment.dart';
+import 'package:wabap/v2/screens/client_home_screen.dart';
+
 import 'amplifyconfiguration.dart';
 import 'theme.dart';
 
@@ -34,6 +37,9 @@ final initApp = FutureProvider<void>((ref) async {
   // Start replaying any colis statuses left pending from a previous session and
   // listen for connectivity coming back.
   ColisStatusSyncService.instance.init();
+
+  // Wabap V2 : paiement des courses à la demande
+  await Payment.init();
 });
 
 class WabapApp extends ConsumerWidget {
@@ -53,7 +59,8 @@ class WabapApp extends ConsumerWidget {
         data: (_) {
           final auth = ref.watch(authProvider);
           safePrint(">>>>>>>>>>> IS LOGIN : ${auth.isLogin()}");
-          return auth.isLogin() ? const HomeScreen() : const LoginScreen();
+          if (!auth.isLogin()) return const LoginScreen();
+          return auth.usesTourneeHome ? const HomeScreen() : const ClientHomeScreen();
         },
         loading: () => const SplashScreen(),
         error: (e, __) => ErrorScreen(e.toString()),

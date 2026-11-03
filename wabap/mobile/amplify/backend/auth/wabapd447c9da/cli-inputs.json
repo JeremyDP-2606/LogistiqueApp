@@ -14,8 +14,8 @@
     ],
     "smsAuthenticationMessage": "Your authentication code is {####}",
     "smsVerificationMessage": "Your verification code is {####}",
-    "emailVerificationSubject": "Your verification code",
-    "emailVerificationMessage": "Your verification code is {####}",
+    "emailVerificationSubject": "Votre code de vérification Wabap",
+    "emailVerificationMessage": "Bienvenue sur Wabap ! Votre code de vérification est {####}.",
     "defaultPasswordPolicy": false,
     "passwordPolicyMinLength": 8,
     "passwordPolicyCharacters": [],
@@ -26,10 +26,15 @@
     "userpoolClientGenerateSecret": false,
     "userpoolClientRefreshTokenValidity": 30,
     "userpoolClientWriteAttributes": [
-      "email"
+      "email",
+      "given_name",
+      "phone_number"
     ],
     "userpoolClientReadAttributes": [
-      "email"
+      "custom:clientName",
+      "email",
+      "given_name",
+      "phone_number"
     ],
     "userpoolClientLambdaRole": "wabapdd447c9da_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,

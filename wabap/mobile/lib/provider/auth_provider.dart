@@ -62,6 +62,14 @@ class AuthModel extends ChangeNotifier {
   bool get isSuperAdmin =>
       _getSession()?.userPoolTokensResult.valueOrNull?.idToken.groups.contains('wabap') ?? false;
 
+  List<String> get groups => _getSession()?.userPoolTokensResult.valueOrNull?.idToken.groups ?? const [];
+
+  bool get isCourier => groups.contains('livreur');
+
+  /// Livreurs et équipes Wabap utilisent l'accueil des tournées (V1) ;
+  /// les autres comptes (particuliers, clients) arrivent sur les courses à la demande.
+  bool get usesTourneeHome => isCourier || isAdmin || isSuperAdmin;
+
   set myId(tmpUserId) {
     _tmpUserId = tmpUserId;
   }

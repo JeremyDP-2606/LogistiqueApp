@@ -17,6 +17,7 @@ import '../provider/auth_provider.dart';
 import 'package:wabap/provider/colis_tournee_provider.dart';
 import 'package:wabap/screen/preuve_livraison/colis_pickup_process_screen.dart';
 import 'package:wabap/services/colis_status_sync_service.dart';
+import 'package:wabap/v2/screens/courier_courses_screen.dart';
 
 final packageInfoProvider = FutureProvider<PackageInfo>((ref) async {
   return await PackageInfo.fromPlatform();
@@ -220,6 +221,22 @@ class HomeScreen extends HookConsumerWidget {
                       style: const TextStyle(color: C.white, fontSize: 30),
                     ),
                   ),
+                  if (ref.watch(authProvider).isCourier)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16, left: 40, right: 40),
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: C.white,
+                          foregroundColor: C.secondary,
+                          minimumSize: const Size.fromHeight(46),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                        ),
+                        onPressed: () => Navigator.of(context)
+                            .push(MaterialPageRoute(builder: (_) => const CourierCoursesScreen())),
+                        icon: const Icon(Icons.bolt),
+                        label: const Text('Courses à la demande', style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
                   const Spacer(flex: 3),
                   tourneesAsync.when(
                     data: (tournees) {
