@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const { plan, appendDetourKm } = require('./planning');
 const { distanceMeters, round2 } = require('./geo');
 const P = require('./proofs');
-const { decodeCode, shortId } = require('./labels');
+const { decodeCode, shortId, customerTag } = require('./labels');
 const { UserError, isStaff, customerIdFor } = require('./orders');
 
 const SAME_PLACE_METERS = 30;
@@ -300,7 +300,7 @@ function createTours(ctx, orders) {
     if (!stop || stop.tourId !== tourId) throw new UserError('Point introuvable');
     const decoded = decodeCode(labelSecret, code);
     if (decoded.error) throw new UserError(decoded.error);
-    if (decoded.customerId !== stop.customerId) throw new UserError('Colis d’un autre client : ne pas le prendre à ce point');
+    if (decoded.customerTag !== customerTag(stop.customerId)) throw new UserError('Colis d’un autre client : ne pas le prendre à ce point');
     const parcel = await store.get('Parcel', decoded.parcelId);
     if (!parcel) throw new UserError('Colis inconnu');
     if (parcel.labelStatus === 'UNUSED') throw new UserError('Étiquette abandonnée : elle ne peut plus être utilisée');

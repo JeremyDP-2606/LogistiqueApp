@@ -36,6 +36,7 @@ function createOrders(ctx) {
       ownerSub: parcel.ownerSub || null,
       type,
       at,
+      day: at.slice(0, 10), // index des statistiques par jour
       tourId: extra.tourId ?? parcel.tourId ?? null,
       stopId: extra.stopId ?? null,
       courierId: extra.courierId ?? null,

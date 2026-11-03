@@ -89,7 +89,8 @@ test('ingestion API : mapping du connecteur, défauts du client, géocodage, don
   assert.equal(o.size, 'M');
   assert.equal(JSON.parse(o.rawInput).num_commande, 'CMD-1');
   assert.equal(o.parcels.length, 2);
-  assert.match(o.parcels[0].code, /^WB1\.[0-9A-Z]{6}\.ENSEIGNE\./);
+  assert.match(o.parcels[0].code, /^WB1\.[0-9A-Z]{6}\.[0-9A-Z]{6}\.[\w-]{10}$/);
+  assert.ok(o.parcels[0].code.length <= 30, 'assez court pour un code-barres');
   assert.deepEqual([o.parcels[0].index, o.parcels[0].total], [1, 2]);
   const ev = await orders.history(o.parcels[0].id);
   assert.deepEqual(ev.map((e) => e.type), ['CREATED']);

@@ -1,0 +1,16 @@
+{
+  "name": "deliveryapi",
+  "version": "1.0.0",
+  "description": "Wabap : demandes, colis, tournées, preuves, courses, étiquettes, rémunération (résolveur AppSync)",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "test": "node --test ../test/*.test.js"
+  },
+  "dependencies": {
+    "bwip-js": "4.5.1",
+    "pdf-lib": "1.17.1",
+    "qrcode": "1.5.4"
+  }
+}
