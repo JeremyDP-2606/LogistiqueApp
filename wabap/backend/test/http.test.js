@@ -93,3 +93,43 @@ test('preuves : lien d\'envoi temporaire puis dépôt du fichier (stockage local
     assert.equal(refused.errors[0].errorType, 'Unauthorized');
   } finally { await s.close(); }
 });
+
+test('utilisateurs Cognito : un client ne gère que les comptes de son entreprise', async () => {
+  const users = [
+    { Username: 'fa-livreur', Attributes: [{ Name: 'sub', Value: 's1' }, { Name: 'custom:clientName', Value: 'France-Antilles' }] },
+    { Username: 'autre-livreur', Attributes: [{ Name: 'sub', Value: 's2' }, { Name: 'custom:clientName', Value: 'Autre' }] },
+  ];
+  const sent = [];
+  const cognitoClient = {
+    async send(cmd) {
+      const name = cmd.constructor.name;
+      sent.push([name, cmd.input]);
+      if (name === 'ListUsersCommand') return { Users: cmd.input.Filter ? users.filter((u) => cmd.input.Filter.includes(u.Attributes[0].Value)) : users };
+      if (name === 'AdminGetUserCommand') { const u = users.find((x) => x.Username === cmd.input.Username); return { Username: u.Username, UserAttributes: u.Attributes }; }
+      return {};
+    },
+  };
+  const { identity } = require('./helpers');
+  const t = testServer({ COGNITO_USER_POOL_ID: 'us-east-1_test' }, { cognitoClient });
+  const server = http.createServer(t.app);
+  await new Promise((r) => server.listen(0, r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const tok = (who) => `${b64({})}.${b64({ ...who.claims, exp: Math.floor(Date.now() / 1000) + 600 })}.x`;
+  const clientFA = identity('chef-fa', { groups: ['client'], clientName: 'France-Antilles' });
+  const call = (who, method, path, body) => fetch(`${base}/v1${path}`, { method, headers: { 'content-type': 'application/json', authorization: tok(who) }, body: body && JSON.stringify(body) });
+  try {
+    const list = await (await call(clientFA, 'GET', '/admin/users')).json();
+    assert.deepEqual(list.map((u) => u.Username), ['fa-livreur']);
+    assert.equal((await call(clientFA, 'DELETE', '/admin/users/autre-livreur')).status, 403);
+    assert.equal((await call(clientFA, 'POST', '/admin/users', { username: 'x', email: 'x@y.z', password: 'Motdepasse1', group: 'admin' })).status, 403);
+    assert.equal((await call(clientFA, 'POST', '/admin/users', { username: 'x', email: 'x@y.z', password: 'Motdepasse1', group: 'livreur', clientName: 'Autre' })).status, 200);
+    const created = sent.find(([n]) => n === 'AdminCreateUserCommand')[1];
+    assert.equal(created.UserAttributes.find((a) => a.Name === 'custom:clientName').Value, 'France-Antilles'); // imposé
+    assert.equal(created.UserPoolId, 'us-east-1_test');
+    const livreur = identity('liv', { groups: ['livreur'] });
+    assert.equal((await call(livreur, 'GET', '/admin/users')).status, 403);
+    const staff = await (await call(identity('w', { groups: ['wabap'] }), 'GET', '/admin/users')).json();
+    assert.equal(staff.length, 2);
+  } finally { await new Promise((r) => server.close(r)); }
+});

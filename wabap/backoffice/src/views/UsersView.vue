@@ -4,7 +4,7 @@ import { color, MARTINIQUE } from "@/util/const";
 import { getUsers, getGroupUser } from "@/api/userService";
 import router from "@/router";
 import { GoogleMap, Marker, InfoWindow } from "vue3-google-map";
-import { API, graphqlOperation } from "@aws-amplify/api";
+import { API, graphqlOperation } from "@/api/client";
 import { listLocations } from "@/graphql/queries";
 import pin_livreur from "@/assets/pin_livreur.png";
 import {

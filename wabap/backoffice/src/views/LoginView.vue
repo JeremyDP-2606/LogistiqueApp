@@ -1,11 +1,9 @@
 <script setup>
 import { ref, computed, inject } from "vue";
-import { Auth } from "@aws-amplify/auth";
+import { Auth } from "@/util/cognito";
 import router from "@/router";
 import logo from "@/assets/logo.png";
 import { isAuthorized } from "@/util/auth";
-import config from "../aws-exports";
-import AWS from "aws-sdk";
 
 const showError = inject("showError");
 const form = ref(null);
@@ -40,18 +38,6 @@ const login = async () => {
         dialogNewPass.value = true;
       } else {
         if (await isAuthorized()) {
-          const currentUser = await Auth.currentAuthenticatedUser();
-          const { idToken } = currentUser.signInUserSession;
-          const cognitoIssuer = `cognito-idp.${config.aws_cognito_region}.amazonaws.com/${config.aws_user_pools_id}`;
-          AWS.config.update({
-            credentials: new AWS.CognitoIdentityCredentials({
-              IdentityPoolId: config.aws_cognito_identity_pool_id,
-              Logins: {
-                [cognitoIssuer]: idToken.jwtToken,
-              },
-            }),
-          });
-          await AWS.config.credentials.getPromise();
           router.push("/missions");
         } else {
           showError("Vous n'êtes pas authorisé à accéder à ce site.");

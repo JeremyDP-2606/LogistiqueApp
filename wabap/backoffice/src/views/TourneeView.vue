@@ -26,7 +26,7 @@ import pin_progress from "@/assets/pin_progress.png";
 import pin_livreur from "@/assets/pin_livreur.png";
 import { getUsers } from "@/api/userService";
 import QrcodeVue from "qrcode.vue";
-import { API, graphqlOperation } from "@aws-amplify/api";
+import { API, graphqlOperation } from "@/api/client";
 import {
   onCreateLocation,
   onUpdateLocation,

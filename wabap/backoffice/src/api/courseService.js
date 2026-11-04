@@ -1,5 +1,5 @@
 // Wabap V2 : courses à la demande et grilles tarifaires.
-import { API, graphqlOperation } from "@aws-amplify/api";
+import { API, graphqlOperation } from "@/api/client";
 
 const STOP = "address latitude longitude contactName phone instructions";
 const COURSE = `

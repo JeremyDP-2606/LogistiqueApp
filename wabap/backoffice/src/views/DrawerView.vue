@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from "vue";
 import { getUsername, getMail, getClientName, isAdmin } from "@/util/auth";
 import { color } from "@/util/const";
 import sha256 from "crypto-js/sha256";
-import { Auth } from "@aws-amplify/auth";
+import { Auth } from "@/util/cognito";
 import router from "@/router";
 import { useRoute } from "vue-router";
 

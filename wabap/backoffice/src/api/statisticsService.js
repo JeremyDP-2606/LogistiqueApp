@@ -1,4 +1,4 @@
-import { API, graphqlOperation } from "@aws-amplify/api";
+import { API, graphqlOperation } from "@/api/client";
 import { listSubscribers } from "@/graphql/queries";
 import { listTourneesWithColis } from "@/api/queries";
 import { getUsers } from "@/api/userService";

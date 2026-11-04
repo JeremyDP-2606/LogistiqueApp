@@ -20,7 +20,7 @@ import {
   nbColisByStatus,
 } from "@/util/util";
 import { getUser, getGroupUser, deleteUser } from "@/api/userService";
-import { API, graphqlOperation } from "@aws-amplify/api";
+import { API, graphqlOperation } from "@/api/client";
 import { listLocations } from "@/graphql/queries";
 import {
   onCreateLocation,

@@ -17,7 +17,7 @@ import CoursesView from "@/views/CoursesView.vue";
 import CourseView from "@/views/CourseView.vue";
 import TarifsView from "@/views/TarifsView.vue";
 import { isUserAuthenticated, isAuthorized, isAdmin } from "@/util/auth";
-import { Auth } from "@aws-amplify/auth";
+import { Auth } from "@/util/cognito";
 
 const routes = [
   {

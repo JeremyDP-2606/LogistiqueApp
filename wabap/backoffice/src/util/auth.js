@@ -1,4 +1,4 @@
-import { Auth } from "@aws-amplify/auth";
+import { Auth } from "@/util/cognito";
 
 export async function isUserAuthenticated() {
   try {

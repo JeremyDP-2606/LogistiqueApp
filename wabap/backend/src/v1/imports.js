@@ -325,7 +325,8 @@ function createImports({ store, mailer, config, log, fetchImpl = fetch }) {
 
   // ---------- Rattachement des abonnés à une mission (ancienne fonction updateMissionSubscribersId) ----------
   async function updateMissionSubscribers({ missionId, subscriberIds, oldSubscriberIds }) {
-    if (!missionId || !Array.isArray(subscriberIds) || !subscriberIds.length) throw Object.assign(new Error('missionId et subscriberIds requis'), { status: 400 });
+    // Liste vide acceptée : la mission n'a plus d'abonnés (l'ancienne fonction ignorait ce cas)
+    if (!missionId || !Array.isArray(subscriberIds)) throw Object.assign(new Error('missionId et subscriberIds requis'), { status: 400 });
     const old = Array.isArray(oldSubscriberIds) ? oldSubscriberIds : [];
     const removed = old.filter((id) => !subscriberIds.includes(id));
     const added = old.length ? subscriberIds.filter((id) => !old.includes(id)) : subscriberIds;

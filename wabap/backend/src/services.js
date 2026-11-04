@@ -64,7 +64,7 @@ function createServices(config, overrides = {}) {
   }
 
   const pubsub = createPubSub();
-  const v1 = createV1({ store, files, mailer, config, google, log, fetchImpl: overrides.fetchImpl });
+  const v1 = createV1({ store, files, mailer, config, google, log, fetchImpl: overrides.fetchImpl, cognitoClient: overrides.cognitoClient });
   const schema = createResolvers({ compiled, store, pubsub, business, serverOps: createServerOperations({ files, v1 }), log });
   const auth = overrides.auth || (config.authMode === 'dev'
     ? createDevAuth({ personas: overrides.personas })

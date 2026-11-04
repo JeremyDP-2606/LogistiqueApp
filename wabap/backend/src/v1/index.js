@@ -4,23 +4,26 @@
 //   PUT  /v1/missions/:id/subscribers      rattachement des abonnés à la mission         ← updateMissionSubscribersId
 //   POST /v1/imports/csv                   import CSV des abonnés                        ← importCSV
 //   POST /v1/imports/excel                 import Excel des points de vente              ← importExcel
+//   /v1/admin/users…                       gestion des utilisateurs Cognito du back-office V1 (cognitoAdmin.js)
 // Les réactions aux écritures (anciens triggers) et la planification des missions sont dans triggers.js / scheduler.js.
 const { createTriggers } = require('./triggers');
 const { createTourneeGenerator } = require('./createTournee');
 const { createImports } = require('./imports');
 const { createUsers } = require('./users');
 const { createRapport } = require('./rapport');
+const { createCognitoAdmin } = require('./cognitoAdmin');
 
 const STAFF = ['wabap', 'admin'];
 const isStaff = (identity) => identity.groups.some((g) => STAFF.includes(g));
 const clientOf = (identity) => identity.claims['custom:clientName'] || null;
 
-function createV1({ store, mailer, config, log, fetchImpl }) {
+function createV1({ store, mailer, config, log, fetchImpl, cognitoClient }) {
   const listeners = { mission: null };
   const triggers = createTriggers({ store, log, onMissionSchedule: (m, removedId) => listeners.mission?.(m, removedId) });
   const tournees = createTourneeGenerator({ store, config, log, fetchImpl });
   const imports = createImports({ store, mailer, config, log, fetchImpl });
-  const users = createUsers({ config });
+  const users = createUsers({ config, client: cognitoClient });
+  const admin = createCognitoAdmin({ config, client: cognitoClient });
   const rapport = createRapport({ store, mailer, config, users, log });
 
   // Accès : équipe Wabap, ou client propriétaire (attribut custom:clientName)
@@ -55,6 +58,12 @@ function createV1({ store, mailer, config, log, fetchImpl }) {
       if (!canActFor(req.identity, req.body?.clientName)) throw Object.assign(new Error('Accès refusé'), { status: 403 });
       return imports.importCsv({ data: req.body.data, clientName: req.body.clientName });
     }));
+    router.get('/admin/users', handler((req) => admin.list(req.identity)));
+    router.get('/admin/users/by-sub/:sub', handler((req) => admin.bySub(req.identity, req.params.sub)));
+    router.get('/admin/users/:username/groups', handler((req) => admin.groups(req.identity, req.params.username)));
+    router.post('/admin/users', handler((req) => admin.create(req.identity, req.body || {})));
+    router.put('/admin/users/:username', handler((req) => admin.update(req.identity, req.params.username, req.body || {})));
+    router.delete('/admin/users/:username', handler((req) => admin.remove(req.identity, req.params.username)));
     router.post('/imports/excel', handler(async (req) => {
       if (!canActFor(req.identity, req.body?.clientName)) throw Object.assign(new Error('Accès refusé'), { status: 403 });
       return imports.importExcel({ data: req.body.data, clientName: req.body.clientName, nbColisDefaut: req.body.nbColisDefaut });
@@ -67,6 +76,7 @@ function createV1({ store, mailer, config, log, fetchImpl }) {
     tournees,
     imports,
     users,
+    admin,
     rapport,
     // Le planificateur s'abonne aux changements de mission
     onMissionChange(fn) { listeners.mission = fn; },
