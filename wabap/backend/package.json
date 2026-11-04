@@ -1,0 +1,39 @@
+{
+  "name": "wabap-backend",
+  "version": "2.0.0",
+  "private": true,
+  "description": "API Wabap (Node.js) : GraphQL + temps réel, Cognito, DynamoDB, S3",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/*.test.js",
+    "schema": "node scripts/print-schema.js > schema/api.graphql",
+    "tables:check": "node scripts/tables.js check",
+    "tables:create": "node scripts/tables.js create"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.1161.0",
+    "@aws-sdk/client-dynamodb": "^3.1161.0",
+    "@aws-sdk/client-s3": "^3.1161.0",
+    "@aws-sdk/client-ses": "^3.1161.0",
+    "@aws-sdk/lib-dynamodb": "^3.1161.0",
+    "@aws-sdk/s3-request-presigner": "^3.1161.0",
+    "aws-jwt-verify": "^4.0.1",
+    "bwip-js": "^4.11.4",
+    "csv-parse": "^5.6.0",
+    "express": "^4.22.3",
+    "graphql": "^16.14.2",
+    "graphql-ws": "^5.16.2",
+    "moment-timezone": "^0.5.48",
+    "node-cron": "^3.0.3",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "ssh2-sftp-client": "^10.0.3",
+    "ws": "^8.22.1",
+    "xlsx": "^0.18.5"
+  }
+}
