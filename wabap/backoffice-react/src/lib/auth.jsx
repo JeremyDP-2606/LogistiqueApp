@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { fetchAuthSession, signIn, signOut, confirmSignIn } from 'aws-amplify/auth';
+import { currentSession, signIn, signOut, completeNewPassword } from './cognito';
 
 const AuthCtx = createContext(null);
 
@@ -17,8 +17,8 @@ export function AuthProvider({ children }) {
 
   const load = useCallback(async () => {
     try {
-      const s = await fetchAuthSession();
-      const id = s.tokens?.idToken?.payload;
+      const s = await currentSession();
+      const id = s?.getIdToken().decodePayload();
       if (!id) return setSession(null);
       setSession({
         sub: id.sub,
@@ -38,16 +38,15 @@ export function AuthProvider({ children }) {
   const value = {
     session,
     async login(email, password) {
-      const r = await signIn({ username: email, password });
-      if (r.nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_NEW_PASSWORD_REQUIRED') return 'NEW_PASSWORD';
+      if (await signIn(email, password) === 'NEW_PASSWORD') return 'NEW_PASSWORD';
       await load();
       return 'OK';
     },
     async setNewPassword(password) {
-      await confirmSignIn({ challengeResponse: password });
+      await completeNewPassword(password);
       await load();
     },
-    async logout() { await signOut(); setSession(null); },
+    async logout() { signOut(); setSession(null); },
   };
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

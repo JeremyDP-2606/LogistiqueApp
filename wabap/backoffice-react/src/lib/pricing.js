@@ -1,4 +1,4 @@
-// COPIE de mobile/amplify/backend/function/deliveryApi/src/lib/pricing.js (vérifiée par test/pricing-sync.test.js).
+// COPIE de backend/src/delivery/lib/pricing.js (vérifiée par test/pricing-sync.test.js).
 // Tarification des courses ponctuelles (spec §11 bis).
 // Prix = max(minimum, (prise en charge[taille] + km × prix/km[taille]) × coef[délai]) + suppléments − remise
 // La grille est historisée : la grille en vigueur est la plus récente dont la date d'effet est passée,

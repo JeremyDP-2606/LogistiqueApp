@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { gql } from '../lib/amplify';
+import { gql } from '../lib/api';
 import { Q } from '../lib/queries';
 import { useAuth } from '../lib/auth';
 import { Badge, ErrorBox, useLoad } from '../components/ui';

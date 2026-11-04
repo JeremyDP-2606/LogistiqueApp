@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gql } from '../lib/amplify';
+import { gql } from '../lib/api';
 import { Q, save } from '../lib/queries';
 import { ErrorBox, Modal, useAction, useLoad } from '../components/ui';
 import { PROOF_LABEL } from '../lib/format';

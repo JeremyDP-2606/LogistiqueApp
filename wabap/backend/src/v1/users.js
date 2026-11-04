@@ -19,6 +19,7 @@ function createUsers({ config, client }) {
         given_name: attr.given_name,
         family_name: attr.family_name,
         client_name: attr['custom:clientName'],
+        email: attr.email,
       };
     });
   }

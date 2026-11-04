@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gql } from '../lib/amplify';
+import { gql } from '../lib/api';
 import { M, Q } from '../lib/queries';
 import { Badge, ErrorBox, Modal, useAction, useLoad } from '../components/ui';
 import { TOUR_STATUS, date, time, num, today } from '../lib/format';

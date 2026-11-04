@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gql } from '../lib/amplify';
+import { gql } from '../lib/api';
 import { Q } from '../lib/queries';
 import { Badge, ErrorBox, useLoad } from '../components/ui';
 import { ORDER_STATUS, dateTime, eur } from '../lib/format';

@@ -10,7 +10,7 @@
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
-    "aws-amplify": "6.6.4",
+    "amazon-cognito-identity-js": "6.3.12",
     "papaparse": "5.4.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",

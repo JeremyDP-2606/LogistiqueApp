@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Papa from 'papaparse';
-import { gql, parseJson } from '../lib/amplify';
+import { gql, parseJson } from '../lib/api';
 import { M, Q } from '../lib/queries';
 import { ErrorBox, useAction, useLoad } from '../components/ui';
 

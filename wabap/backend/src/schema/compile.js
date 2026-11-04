@@ -64,6 +64,7 @@ function compileSchema(source) {
   const doc = parse(source);
   const enums = new Map();
   const objects = new Map(); // types non modèles
+  const inputs = new Map(); // types d'entrée déclarés (opérations personnalisées)
   const modelNodes = new Map();
   const roots = { Query: [], Mutation: [], Subscription: [] };
 
@@ -74,6 +75,8 @@ function compileSchema(source) {
       if (roots[name]) roots[name].push(...def.fields);
       else if (directive(def, 'model')) modelNodes.set(name, def);
       else objects.set(name, def);
+    } else if (def.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION) {
+      inputs.set(def.name.value, def);
     } else if (def.kind === Kind.SCALAR_TYPE_DEFINITION) {
       // scalaires déclarés : ignorés (les scalaires AWS sont fournis)
     } else {
@@ -216,6 +219,7 @@ function compileSchema(source) {
     return t.name.value;
   }
   for (const [name, o] of objects) out.push(`${desc(o)}type ${name} {\n${o.fields.map(stripField).join('\n')}\n}\n`);
+  for (const [name, o] of inputs) out.push(`${desc(o)}input ${name} {\n${o.fields.map(stripField).join('\n')}\n}\n`);
 
   // Types d'entrée des types non modèles (ajoutés à la fin, seulement s'ils servent)
   const objectInputs = [];

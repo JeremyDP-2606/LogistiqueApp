@@ -219,6 +219,16 @@ type CourierPositionResult {
   at: AWSDateTime!
 }
 
+type RapportResponse {
+  statusCode: Int!
+  message: String
+}
+
+input RapportInput {
+  tourneeId: ID!
+  message: String
+}
+
 enum ModelSortDirection {
   ASC
   DESC
@@ -611,6 +621,11 @@ type Mission {
   generateDayBefore: Boolean
   startTime: Float
   startTimeZone: String
+
+  """
+  Contrôle du ramassage (attribut Cognito custom:deliveryChecking du client, « true » / « false »)
+  """
+  deliveryChecking: String
   tournee(filter: ModelTourneeFilterInput, sortDirection: ModelSortDirection, limit: Int, nextToken: String): ModelTourneeConnection
   createdAt: AWSDateTime!
   updatedAt: AWSDateTime!
@@ -633,6 +648,7 @@ input ModelMissionFilterInput {
   generateDayBefore: ModelBooleanInput
   startTime: ModelFloatInput
   startTimeZone: ModelStringInput
+  deliveryChecking: ModelStringInput
   createdAt: ModelStringInput
   updatedAt: ModelStringInput
   and: [ModelMissionFilterInput]
@@ -651,6 +667,7 @@ input ModelMissionConditionInput {
   generateDayBefore: ModelBooleanInput
   startTime: ModelFloatInput
   startTimeZone: ModelStringInput
+  deliveryChecking: ModelStringInput
   createdAt: ModelStringInput
   updatedAt: ModelStringInput
   and: [ModelMissionConditionInput]
@@ -669,6 +686,7 @@ input ModelSubscriptionMissionFilterInput {
   generateDayBefore: ModelSubscriptionBooleanInput
   startTime: ModelSubscriptionFloatInput
   startTimeZone: ModelSubscriptionStringInput
+  deliveryChecking: ModelSubscriptionStringInput
   createdAt: ModelSubscriptionStringInput
   updatedAt: ModelSubscriptionStringInput
   and: [ModelSubscriptionMissionFilterInput]
@@ -691,6 +709,7 @@ input CreateMissionInput {
   generateDayBefore: Boolean
   startTime: Float
   startTimeZone: String
+  deliveryChecking: String
 }
 
 input UpdateMissionInput {
@@ -705,6 +724,7 @@ input UpdateMissionInput {
   generateDayBefore: Boolean
   startTime: Float
   startTimeZone: String
+  deliveryChecking: String
 }
 
 input DeleteMissionInput {
@@ -793,6 +813,11 @@ type Tournee {
   distance: Int
   duree: Int
   nbColis: Int
+
+  """
+  Copié de la mission à la génération : rapport de tournée exigé en fin de tournée
+  """
+  deliveryChecking: Boolean
   updatedAt: AWSDateTime!
 }
 
@@ -815,6 +840,7 @@ input ModelTourneeFilterInput {
   distance: ModelIntInput
   duree: ModelIntInput
   nbColis: ModelIntInput
+  deliveryChecking: ModelBooleanInput
   updatedAt: ModelStringInput
   and: [ModelTourneeFilterInput]
   or: [ModelTourneeFilterInput]
@@ -834,6 +860,7 @@ input ModelTourneeConditionInput {
   distance: ModelIntInput
   duree: ModelIntInput
   nbColis: ModelIntInput
+  deliveryChecking: ModelBooleanInput
   updatedAt: ModelStringInput
   and: [ModelTourneeConditionInput]
   or: [ModelTourneeConditionInput]
@@ -852,6 +879,7 @@ input ModelSubscriptionTourneeFilterInput {
   distance: ModelSubscriptionIntInput
   duree: ModelSubscriptionIntInput
   nbColis: ModelSubscriptionIntInput
+  deliveryChecking: ModelSubscriptionBooleanInput
   updatedAt: ModelSubscriptionStringInput
   and: [ModelSubscriptionTourneeFilterInput]
   or: [ModelSubscriptionTourneeFilterInput]
@@ -874,6 +902,7 @@ input CreateTourneeInput {
   distance: Int
   duree: Int
   nbColis: Int
+  deliveryChecking: Boolean
 }
 
 input UpdateTourneeInput {
@@ -890,6 +919,7 @@ input UpdateTourneeInput {
   distance: Int
   duree: Int
   nbColis: Int
+  deliveryChecking: Boolean
 }
 
 input DeleteTourneeInput {
@@ -2681,6 +2711,11 @@ type Mutation {
   adjustEarning(tourId: ID!, amount: Float!, reason: String!): TourEarning
   validateEarning(tourId: ID!): TourEarning
   markStatementPaid(courierId: ID!, month: String!): AWSJSON
+
+  """
+  Rapport de fin de tournée V1 (envoyé par e-mail au client), appelé par l'app livreur
+  """
+  invokeLambdaRapportTournee(input: RapportInput!): RapportResponse
 
   """
   Lien d'envoi temporaire (S3) d'une preuve : photo, signature. Renvoie { key, url, headers }.

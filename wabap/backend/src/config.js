@@ -24,6 +24,7 @@ function loadConfig(env = process.env) {
     reportSender: env.REPORT_SENDER || env.SENDER_EMAIL,
     importReportEmails: list(env.IMPORT_REPORT_EMAILS),
     importErrorEmails: list(env.IMPORT_ERROR_EMAILS),
+    tourneeReportEmails: list(env.TOURNEE_REPORT_EMAILS),
     // Secrets des services externes
     googleMapsKey: env.GOOGLE_MAPS_API_KEY,
     stripeKey: env.STRIPE_SECRET_KEY,

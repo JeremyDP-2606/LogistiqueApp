@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { gql, parseJson } from '../lib/amplify';
+import { gql, parseJson } from '../lib/api';
 import { M, Q } from '../lib/queries';
 import { Badge, ErrorBox, Modal, download, useAction, useLoad } from '../components/ui';
 import { EARNING_STATUS, date, eur, num, today } from '../lib/format';

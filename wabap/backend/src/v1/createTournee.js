@@ -52,6 +52,7 @@ function createTourneeGenerator({ store, config, log, fetchImpl = fetch }) {
       createdAt: at(),
       updatedAt: at(),
       owner: mission.owner,
+      deliveryChecking: mission.deliveryChecking === true || mission.deliveryChecking === 'true',
     };
     await store.put('Tournee', tournee);
 

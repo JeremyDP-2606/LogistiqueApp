@@ -49,6 +49,8 @@ type Mission @model
   generateDayBefore: Boolean
   startTime: Float
   startTimeZone: String
+  "Contrôle du ramassage (attribut Cognito custom:deliveryChecking du client, « true » / « false »)"
+  deliveryChecking: String
   tournee: [Tournee] @hasMany
 }
 
@@ -87,6 +89,8 @@ type Tournee @model
   distance: Int
   duree: Int
   nbColis: Int
+  "Copié de la mission à la génération : rapport de tournée exigé en fin de tournée"
+  deliveryChecking: Boolean
 }
 
 type Colis @model
@@ -629,9 +633,14 @@ type Mutation {
   adjustEarning(tourId: ID!, amount: Float!, reason: String!): TourEarning @auth(groups: ["wabap", "admin", "finance"])
   validateEarning(tourId: ID!): TourEarning @auth(groups: ["wabap", "admin", "finance"])
   markStatementPaid(courierId: ID!, month: String!): AWSJSON @auth(groups: ["wabap", "admin", "finance"])
+  "Rapport de fin de tournée V1 (envoyé par e-mail au client), appelé par l'app livreur"
+  invokeLambdaRapportTournee(input: RapportInput!): RapportResponse
   "Lien d'envoi temporaire (S3) d'une preuve : photo, signature. Renvoie { key, url, headers }."
   createUploadUrl(kind: String!, contentType: String!, tourId: ID): AWSJSON @auth(groups: ["livreur", "wabap", "admin", "dispatch"])
 }
+
+input RapportInput { tourneeId: ID! message: String }
+type RapportResponse { statusCode: Int! message: String }
 
 type Subscription {
   "Le livreur est prévenu des ajouts, retraits et réordonnancements de sa tournée (spec §7)"

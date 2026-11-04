@@ -9,6 +9,7 @@ const { createTriggers } = require('./triggers');
 const { createTourneeGenerator } = require('./createTournee');
 const { createImports } = require('./imports');
 const { createUsers } = require('./users');
+const { createRapport } = require('./rapport');
 
 const STAFF = ['wabap', 'admin'];
 const isStaff = (identity) => identity.groups.some((g) => STAFF.includes(g));
@@ -20,6 +21,7 @@ function createV1({ store, mailer, config, log, fetchImpl }) {
   const tournees = createTourneeGenerator({ store, config, log, fetchImpl });
   const imports = createImports({ store, mailer, config, log, fetchImpl });
   const users = createUsers({ config });
+  const rapport = createRapport({ store, mailer, config, users, log });
 
   // Accès : équipe Wabap, ou client propriétaire (attribut custom:clientName)
   const canActFor = (identity, owner) => isStaff(identity) || (owner && clientOf(identity) === owner);
@@ -65,6 +67,7 @@ function createV1({ store, mailer, config, log, fetchImpl }) {
     tournees,
     imports,
     users,
+    rapport,
     // Le planificateur s'abonne aux changements de mission
     onMissionChange(fn) { listeners.mission = fn; },
   };
