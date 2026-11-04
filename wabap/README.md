@@ -4,8 +4,14 @@ Plateforme de livraison Wabap : tournées récurrentes (V1) et courses à la dem
 
 | Dossier | Contenu |
 |---|---|
-| `mobile/` | App Flutter (livreurs et clients) et backend AWS Amplify (`mobile/amplify/` : AppSync GraphQL, DynamoDB, Lambda Node.js, Cognito, S3) |
-| `backoffice/` | Back-office Vue.js 3 + Vuetify |
+| `backend/` | API Node.js (GraphQL, temps réel, routes REST) : remplace Amplify ; Cognito, DynamoDB, S3 et SES conservés |
+| `mobile/` | App Flutter (livreurs et clients) |
+| `backoffice-react/` | Back-office de la plateforme (React) |
+| `backoffice/` | Back-office V1 (Vue.js 3 + Vuetify) |
+| `docs/MIGRATION.md` | Bascule d'Amplify vers l'API Node.js |
+
+Architecture : applications → API Node.js (`backend/`, image Docker) → DynamoDB, S3, SES ; connexion des utilisateurs par
+Cognito (jeton vérifié par l'API). Plus aucun identifiant AWS dans les navigateurs ni dans l'app.
 
 ## Secrets et configuration
 
@@ -17,10 +23,9 @@ Aucune clé ni aucun mot de passe n'est versionné. Chaque environnement doit le
 | Clé Google Maps, app iOS | `mobile/ios/Flutter/Secrets.xcconfig` (modèle : `Secrets.xcconfig.example`) |
 | Clé Google Maps, code Dart (cartes statiques, itinéraires) | `flutter run --dart-define=GOOGLE_MAPS_API_KEY=...` |
 | Clé Google Maps, back-office | `VITE_GOOGLE_MAPS_API_KEY` dans `backoffice/.env` (modèle : `.env.example`) |
-| Clé Google Maps, Lambda `createTournee`, `importCSV`, `importExcel` | secret Amplify `GOOGLE_MAPS_API_KEY` (`amplify update function` > « Configure secret values ») |
-| Accès RouteXL, Lambda `createTournee` | secret Amplify `ROUTEXL_AUTH` (identifiant:mot de passe encodé en base64) |
-| Accès SFTP, Lambda `importCSV` | dans l'événement de la règle planifiée, jamais dans le code |
-| Configuration Amplify de l'app | `mobile/lib/amplifyconfiguration.dart`, généré par `amplify pull` |
+| Clés du serveur (Google Maps, RouteXL, Stripe, signature des étiquettes), accès SFTP | variables d'environnement du conteneur de l'API (modèle : `backend/.env.example`) |
+| Adresse de l'API et Cognito pour l'app | `flutter run --dart-define=API_URL=... --dart-define=COGNITO_USER_POOL_ID=... --dart-define=COGNITO_CLIENT_ID=...` |
+| Adresse de l'API et Cognito pour les back-offices | `VITE_API_URL`, `VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_CLIENT_ID` (modèles `.env.example`) |
 
 Les clés présentes dans la V1 ont été publiées dans l'app et le back-office : elles doivent être régénérées et restreintes (par application Android/iOS, par domaine pour le back-office, par API côté serveur).
 
@@ -30,11 +35,11 @@ Le mode « course instantanée » du premier prototype a été retiré : une cou
 
 | Partie | Emplacement |
 |---|---|
-| Schéma GraphQL (configuration, demandes, colis, historique, tournées, points, rémunération) | `mobile/amplify/backend/api/wabap/schema.graphql` (après les modèles V1, inchangés) |
-| Fonction `deliveryApi` : toute la logique métier (34 opérations) | `mobile/amplify/backend/function/deliveryApi/` |
+| Schéma GraphQL (configuration, demandes, colis, historique, tournées, points, rémunération) | `backend/schema/schema.graphql` (après les modèles V1) |
+| Logique métier (34 opérations) | `backend/src/delivery/` |
 | App Flutter : client à la course, livreur sur tournées, inscription, paiement | `mobile/lib/v2/` |
 | Back-office React (dispatch, finance, configuration, espace client) | `backoffice-react/` |
-| AppSync simulé pour développer et démontrer sans AWS | `tools/mock-appsync/` |
+| Serveur de démonstration sans AWS (données fictives) | `cd backend && npm run demo` |
 
 Couvert par lot :
 1. **Socle** : ingestion (API, import CSV, saisie, app) avec mapping par connecteur, normalisation (adresses, téléphones y compris DOM), défauts du client, géocodage, file d'anomalies, donnée brute conservée ; colis à code signé ; profils de preuve en cascade ; tournées dédiées ou mutualisées, collecte avant livraison, heures limites strictes, gel après démarrage ; historique non modifiable ; vue client cloisonnée côté serveur.
@@ -47,7 +52,7 @@ Pas encore fait : portage des écrans V1 dans le back-office React, optimisation
 ### Tests
 
 ```bash
-cd mobile/amplify/backend/function/deliveryApi && (cd test/sdk && npm install) && (cd src && npm install) && node --test test/*.test.js
+cd backend && npm install && npm test
 ```
 ```bash
 cd backoffice-react && npm install && npm test
@@ -56,18 +61,19 @@ cd backoffice-react && npm install && npm test
 cd mobile && flutter test test/platform_contract_test.dart
 ```
 
-Les fichiers `mobile/test/fixtures/*.json` sont des réponses réelles de `deliveryApi` (`node tools/mock-appsync/export-fixtures.js mobile/test/fixtures`) : le test de contrat échoue si le format change.
+Les fichiers `mobile/test/fixtures/*.json` sont des réponses réelles du serveur (`node backend/scripts/export-fixtures.js mobile/test/fixtures`) : le test de contrat échoue si le format change. Les tests du serveur vérifient aussi que toutes les requêtes GraphQL des trois applications restent valides.
 
 ### Mise en service (d'abord sur l'environnement `dev`)
 
-1. **Fusionner le schéma avec celui de la production** : le schéma de l'archive V1 n'est pas à jour (l'app appelle `invokeLambdaRapportTournee`, absent). Récupérer le schéma déployé (`amplify pull`) et y reporter la partie plateforme avant tout `amplify push`.
-2. **Paramètres de la fonction `deliveryApi`** dans `amplify/team-provider-info.json` : `graphqlApiId` (la valeur `dev` reprend celle de la Lambda V1 `createTournee`), `storageBucket` (bucket S3 du stockage), `senderEmail` (adresse SES vérifiée).
-3. **Secrets dans SSM Parameter Store** (SecureString) : `/wabap/<env>/STRIPE_SECRET_KEY`, `/wabap/<env>/GOOGLE_MAPS_API_KEY` (Geocoding et Routes activés), `/wabap/<env>/LABEL_SIGNING_SECRET` (chaîne aléatoire longue : elle signe les codes des étiquettes, ne jamais la changer après la mise en service).
-4. **Groupes Cognito** : `dispatch` et `finance` sont ajoutés ; y placer les dispatchers et comptables.
-5. **Configuration initiale** dans le back-office : types de client, clients (l'identifiant = attribut `custom:clientName` de leurs utilisateurs), profils de preuve, commentaires prédéfinis, grille des courses, grille de rémunération.
-6. `amplify push` sur `dev`, puis l'app :
+Voir `docs/MIGRATION.md` (bascule depuis Amplify, sans déplacement de données) et `backend/README.md` (configuration,
+droits AWS, déploiement Docker). En résumé :
+
+1. Configurer le serveur (`backend/.env.example`), vérifier puis compléter les tables : `npm run tables:check`, `npm run tables:create`.
+2. Groupes Cognito `dispatch` et `finance` : y placer les dispatchers et comptables.
+3. Configuration initiale dans le back-office : types de client, clients (l'identifiant = attribut `custom:clientName` de leurs utilisateurs), profils de preuve, commentaires prédéfinis, grille des courses, grille de rémunération.
+4. Publier les back-offices et l'app avec l'adresse de l'API :
    ```bash
-   flutter run --dart-define=GOOGLE_MAPS_API_KEY=... --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_...
+   flutter run --dart-define=API_URL=https://api.wabap.fr/graphql --dart-define=GOOGLE_MAPS_API_KEY=... --dart-define=STRIPE_PUBLISHABLE_KEY=pk_test_...
    ```
 
 ### Avant l'ouverture au public
@@ -78,7 +84,7 @@ Les fichiers `mobile/test/fixtures/*.json` sont des réponses réelles de `deliv
 
 ### Points relevés dans la V1
 
-- Les Lambda V1 tournent sous Node.js 16 : AWS ne permettra plus de les mettre à jour après le 31 août 2027.
-- Le transformer Amplify signale que, sur plusieurs modèles V1 (Tournee, Inscription, Colis…), un propriétaire peut réattribuer la propriété d'un enregistrement (par exemple un livreur peut modifier le champ livreur d'une tournée). Des règles d'autorisation par champ corrigeraient ce point.
-- Les preuves photo de la V1 sont envoyées sur S3 en accès `guest` (lisibles par tous) ; la plateforme utilise `protected`.
+- Les Lambda V1 (Node.js 16) sont remplacées par le serveur : voir `docs/MIGRATION.md` pour leur arrêt.
+- Un propriétaire ne peut plus céder un enregistrement à un autre client (contrôle ajouté par le serveur). En revanche un livreur peut toujours modifier les autres champs d'une tournée qui lui est attribuée (règle V1 `livreurID`, opérations read et update) ; des règles par champ restreindraient ce point.
+- Les preuves V1 restent rangées sous `public/tournee_<id>/` dans S3 (emplacement historique) ; celles de la plateforme sont privées (`proofs/`). Rendre le préfixe `public/` non public dans la politique du bucket.
 - Le magasin de clés de signature Android présent dans l'archive (`android/FOa3VztdaNW8`) n'a pas été importé : il doit rester hors du dépôt.

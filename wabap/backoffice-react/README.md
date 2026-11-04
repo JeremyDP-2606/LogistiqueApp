@@ -1,6 +1,6 @@
 # Back-office Wabap (React)
 
-Back-office de la plateforme (spec fonctionnelle v0.1), connecté au même AWS Amplify / Cognito que l'app mobile.
+Back-office de la plateforme (spec fonctionnelle v0.1), connecté à l'API Wabap (`../backend`) avec les comptes Cognito de l'app mobile.
 L'ancien back-office Vue (`../backoffice`) reste utilisé pour les écrans V1 (missions, abonnés) en attendant leur portage.
 
 | Rôle (groupe Cognito) | Écrans |
@@ -13,11 +13,13 @@ L'ancien back-office Vue (`../backoffice`) reste utilisé pour les écrans V1 (m
 ```bash
 npm install
 npm run dev        # http://localhost:5174
-npm test           # le calcul de prix du simulateur est identique à celui de la Lambda
+npm test           # le calcul de prix du simulateur est identique à celui du serveur
 ```
 
-`src/aws-exports.js` vient de la configuration Amplify (`amplify pull`). Le pool d'identités n'est volontairement pas utilisé : le back-office ne parle qu'à AppSync avec le jeton Cognito.
+Configuration (`.env.local` / `.env.production`, modèle `.env.example`) : `VITE_API_URL` (adresse de l'API),
+`VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_CLIENT_ID`. La connexion passe par le SDK Cognito (`amazon-cognito-identity-js`) ;
+aucun identifiant AWS n'est utilisé dans le navigateur.
 
 ## Développer sans AWS
 
-`../tools/mock-appsync` simule AppSync avec le schéma réellement généré et la vraie fonction `deliveryApi`, sur un scénario de démonstration.
+`cd ../backend && npm run demo` démarre l'API sur un scénario de démonstration (données fictives, jetons non signés acceptés).

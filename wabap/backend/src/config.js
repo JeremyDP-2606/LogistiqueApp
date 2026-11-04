@@ -32,6 +32,10 @@ function loadConfig(env = process.env) {
     routexlAuth: env.ROUTEXL_AUTH,
     // Tâches planifiées (une seule instance doit les exécuter)
     schedulerEnabled: env.SCHEDULER_ENABLED !== 'false',
+    // Bascule depuis Amplify : tant que les anciennes Lambda (flux DynamoDB, règles EventBridge Mission_*)
+    // sont actives, désactiver leurs équivalents ici pour éviter un double traitement
+    v1Triggers: env.V1_TRIGGERS !== 'false',
+    missionScheduler: env.MISSION_SCHEDULER !== 'false',
     labelsCron: env.LABELS_CRON || '*/30 * * * *',
     // Imports SFTP planifiés : JSON [{ "cron": "0 5 * * *", "clientName": "...", "host": "...", "port": 22, "username": "...", "password": "...", "filename": "[ABO_]YYYYMMDD[.csv]", "timezone": "America/Martinique" }]
     sftpImports: env.SFTP_IMPORTS ? JSON.parse(env.SFTP_IMPORTS) : [],

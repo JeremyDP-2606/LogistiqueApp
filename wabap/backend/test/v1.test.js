@@ -170,3 +170,17 @@ test('planificateur : missions programmées puis reprogrammées ou retirées à 
   assert.equal(sch.missionJobs.has('M1'), false);
   sch.stop();
 });
+
+test('bascule : réactions V1 et planning des missions désactivables', async () => {
+  const { store, services } = testServer({ V1_TRIGGERS: 'false', MISSION_SCHEDULER: 'false' });
+  await seedTournee(store);
+  await store.delete('Tournee', 'T1');
+  await store.drain();
+  assert.ok(await store.get('Colis', 'C1')); // l'ancienne Lambda s'en charge encore
+  const { createScheduler } = require('../src/scheduler');
+  await store.put('Mission', { id: 'M1', owner: 'FA', name: 'A', livreurID: 'l1', startTime: 5, daysOfWeek: [true, true, true, true, true, false, false], startTimeZone: 'UTC' });
+  const sch = createScheduler(services);
+  await sch.start();
+  assert.equal(sch.missionJobs.size, 0);
+  sch.stop();
+});

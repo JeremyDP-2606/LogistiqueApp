@@ -494,7 +494,7 @@ async function gqlAs(apiKey, query, variables) {
 
   await stage.overlay(true, 'Wabap V2',
     'Une seule plateforme pour vos clients professionnels, vos particuliers et vos livreurs.',
-    ['Import CSV & API', 'Tournées optimisées', 'Étiquettes QR signées', 'Preuves configurables', 'Paiement Stripe', 'Rémunération au km', 'AWS Amplify · Flutter · React'],
+    ['Import CSV & API', 'Tournées optimisées', 'Étiquettes QR signées', 'Preuves configurables', 'Paiement Stripe', 'Rémunération au km', 'Node.js · Flutter · React · Cognito'],
     'Démonstration sur données fictives');
   await sleep(6000);
   await snap('fin');

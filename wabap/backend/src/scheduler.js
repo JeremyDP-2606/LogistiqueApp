@@ -41,15 +41,17 @@ function createScheduler(services) {
     missionJobs,
     async start() {
       let n = 0;
-      for await (const m of store.scanAll('Mission')) { scheduleMission(m); if (missionJobs.has(m.id)) n++; }
-      v1.onMissionChange(scheduleMission);
+      if (config.missionScheduler !== false) {
+        for await (const m of store.scanAll('Mission')) { scheduleMission(m); if (missionJobs.has(m.id)) n++; }
+        v1.onMissionChange(scheduleMission);
+      }
       jobs.push(cron.schedule(config.labelsCron, () => delivery.labels.sendDue().catch((e) => log.error('[étiquettes]', e))));
       for (const imp of config.sftpImports) {
         jobs.push(cron.schedule(imp.cron, () => {
           v1.imports.importCsv({ clientName: imp.clientName, ftp: imp }).catch((e) => log.error('[import SFTP]', e));
         }, { timezone: imp.timezone || 'UTC' }));
       }
-      log.log(`Tâches planifiées : ${n} mission(s), étiquettes (${config.labelsCron}), ${config.sftpImports.length} import(s) SFTP`);
+      log.log(`Tâches planifiées : ${config.missionScheduler !== false ? `${n} mission(s)` : 'missions désactivées'}, étiquettes (${config.labelsCron}), ${config.sftpImports.length} import(s) SFTP`);
     },
     stop() {
       for (const j of [...jobs, ...missionJobs.values()]) j.stop();

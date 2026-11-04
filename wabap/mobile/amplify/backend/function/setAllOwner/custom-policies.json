@@ -1,6 +1,0 @@
-[
-  {
-    "Action": ["dynamodb:*"],
-    "Resource": ["*"]
-  }
-]

@@ -19,7 +19,8 @@ const clientOf = (identity) => identity.claims['custom:clientName'] || null;
 
 function createV1({ store, mailer, config, log, fetchImpl, cognitoClient }) {
   const listeners = { mission: null };
-  const triggers = createTriggers({ store, log, onMissionSchedule: (m, removedId) => listeners.mission?.(m, removedId) });
+  const triggers = config.v1Triggers === false ? null
+    : createTriggers({ store, log, onMissionSchedule: (m, removedId) => listeners.mission?.(m, removedId) });
   const tournees = createTourneeGenerator({ store, config, log, fetchImpl });
   const imports = createImports({ store, mailer, config, log, fetchImpl });
   const users = createUsers({ config, client: cognitoClient });
