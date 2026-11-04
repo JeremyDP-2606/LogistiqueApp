@@ -1,5 +1,5 @@
-import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
+import 'package:wabap/models/json_helpers.dart';
 import 'package:wabap/models/Colis.dart';
 import 'package:wabap/models/ColisStatus.dart';
 import 'package:wabap/models/Inscription.dart';
@@ -8,7 +8,6 @@ import 'package:wabap/models/Mission.dart';
 import 'package:wabap/models/Status.dart';
 import 'package:wabap/models/Tournee.dart';
 import 'package:synchronized/synchronized.dart';
-import 'dart:convert';
 
 class PaginationResponse<T> {
   final List<T> list;
@@ -45,280 +44,77 @@ class RapportResponse {
 }
 
 
+// Accès aux données V1 (tournées, colis, missions, positions) par l'API Wabap.
 class API {
+  // Champs demandés à l'API pour chaque modèle
+  static const _missionLite = 'mission { id owner name livreurID startName startLongitude startLatitude startTimeZone deliveryChecking }';
+  static const _tourneeFields = 'id owner name status startName startLongitude startLatitude livreurID missionTourneeId createdAt updatedAt distance duree nbColis deliveryChecking $_missionLite';
+  static const _colisStatusFields = 'id owner colisLogsId status message createdAt updatedAt longitude latitude';
+  static const _colisFields = 'id owner tourneeColisId position polyline distance duration createdAt updatedAt address longitude latitude '
+      'subscriberColisId subscriberName colisLastStatusId lastStatus { id owner status message createdAt } tournee { id } '
+      'subscriber { id owner name phone1 phone2 instructions numabo }';
+  static const _locationFields = 'id owner userId userName tourneeId latitude longitude lastUpdate createdAt updatedAt';
+  static const _inscriptionFields = 'id owner livreurID missionInscriptionsId createdAt updatedAt';
+
+  static Map<String, dynamic>? _obj(Map<String, dynamic> data, String key) =>
+      data[key] == null ? null : Map<String, dynamic>.from(data[key] as Map);
 
   static Future<RapportResponse> invokeLambdaRapportTournee(RapportInput input) async {
-    const String graphQLMutation = '''
-  mutation InvokeLambdaRapportTournee(\$input: RapportInput!) {
-    invokeLambdaRapportTournee(input: \$input) {
-      statusCode
-      message
-    }
+    final data = await Api.graphql(
+        r'mutation InvokeLambdaRapportTournee($input: RapportInput!) { invokeLambdaRapportTournee(input: $input) { statusCode message } }',
+        {'input': input.toMap()});
+    safePrint("Rapport : $data");
+    final r = _obj(data, 'invokeLambdaRapportTournee');
+    if (r == null) throw Exception("Error: response.data is null");
+    return RapportResponse.fromMap(r);
   }
-  ''';
-
-    final request = GraphQLRequest<String>(
-      document: graphQLMutation,
-      variables: {
-        'input': input.toMap(),
-      },
-    );
-
-    final response = await Amplify.API.mutate(request: request).response;
-
-    safePrint("Raw response: ${response.data}");
-
-    if (response.hasErrors) {
-      throw Exception("Error invoking Lambda: ${response.errors}");
-    }
-
-    if (response.data == null) {
-      throw Exception("Error: response.data is null");
-    }
-
-    final Map<String, dynamic> data = jsonDecode(response.data!);
-    safePrint("Decoded response: $data");
-
-    return RapportResponse.fromMap(data['invokeLambdaRapportTournee']);
-  }
-
 
   static Future<PaginationResponse<Tournee>> loadTournees(String livreurId, [String? nextToken, int limit = 50]) async {
     safePrint(">>>> loadTournees($livreurId, $nextToken, $limit)");
-
-    const String query = '''
-      query ByLivreurOrderDate(
-        \$livreurId: ID!
-        \$sortDirection: ModelSortDirection
-        \$limit: Int
-        \$nextToken: String
-      ) {
-        byLivreurOrderDate(
-          livreurID: \$livreurId
-          sortDirection: \$sortDirection
-          limit: \$limit
-          nextToken: \$nextToken
-        ) {
-          items {
-            id
-            owner
-            name
-            status
-            startName
-            startLongitude
-            startLatitude
-            livreurID
-            mission {
-              id
-            }
-            createdAt
-            updatedAt
-            distance
-            duree
-            nbColis
-            deliveryChecking
-            colis(limit: 1000) {
-              items {
-                id
-                longitude
-                latitude
-                lastStatus {
-                  id
-                  owner
-                  status
-                }
-              }
-            }
-            __typename
-          }
-          nextToken
-          __typename
-        }
-      }
-''';
-
-    var req = GraphQLRequest<PaginatedResult<Tournee>>(
-        document: query,
-        modelType: const PaginatedModelType(Tournee.classType),
-        variables: {'livreurId': livreurId, 'sortDirection': 'DESC', 'limit': limit, 'nextToken': nextToken},
-        decodePath: "byLivreurOrderDate");
-
-    final req2 = Amplify.API.query(request: req);
-    final rep = await req2.response;
-    if (rep.hasErrors) throw rep.errors;
-    var tournees = rep.data?.items ?? List.empty();
-
-    safePrint(">>>> loadTournees REP = tournees=[${tournees.length}] - nextToken=[${rep.data?.nextToken}]");
-
-    return PaginationResponse(
-        list: tournees.where((tournee) => tournee != null).toList().cast<Tournee>(), nextToken: rep.data?.nextToken);
+    final data = await Api.graphql(
+        'query ByLivreurOrderDate(\$livreurId: ID!, \$sortDirection: ModelSortDirection, \$limit: Int, \$nextToken: String) { '
+        'byLivreurOrderDate(livreurID: \$livreurId, sortDirection: \$sortDirection, limit: \$limit, nextToken: \$nextToken) { '
+        'items { $_tourneeFields colis(limit: 1000) { items { id longitude latitude lastStatus { id owner status } } } } nextToken } }',
+        {'livreurId': livreurId, 'sortDirection': 'DESC', 'limit': limit, 'nextToken': nextToken});
+    final page = data['byLivreurOrderDate'] as Map;
+    final tournees = listOf(page['items'])!.map(Tournee.fromJson).toList();
+    safePrint(">>>> loadTournees REP = tournees=[${tournees.length}] - nextToken=[${page['nextToken']}]");
+    return PaginationResponse(list: tournees, nextToken: page['nextToken'] as String?);
   }
 
   static Future<PaginationResponse<Mission>> loadMissions([String? nextToken, int limit = 50]) async {
     safePrint(">>>> loadMissions($nextToken, $limit)");
-
-    const String query = '''
-      query MyQuery(
-        \$limit: Int
-        \$nextToken: String
-      ) {
-        listMissions(
-          limit: \$limit
-          nextToken: \$nextToken
-        ) {
-          items {
-            id
-            owner
-            createdAt
-            daysOfWeek
-            generateDayBefore
-            livreurID
-            name
-            startLatitude
-            startLongitude
-            startName
-            startTime
-            startTimeZone
-            subscribers(limit: 200, filter: {unsubscribed: {eq: false}}) {
-              items {
-                id
-                owner
-                latitude
-                longitude
-                name
-              }
-              nextToken
-            }
-            inscriptions {
-              items {
-                id
-                owner
-                livreurID
-              }
-              nextToken
-            }
-            updatedAt
-          }
-          nextToken
-        }
-      }
-
-''';
-    var req = GraphQLRequest<PaginatedResult<Mission>>(
-        document: query,
-        modelType: const PaginatedModelType(Mission.classType),
-        variables: {'limit': limit, 'nextToken': nextToken},
-        decodePath: "listMissions");
-
-    final rep = await Amplify.API.query(request: req).response;
-    if (rep.hasErrors) throw rep.errors;
-    var missions = rep.data?.items ?? [];
-
-    safePrint(">>>> loadMissions REP = missions=[${missions.length}] - nextToken=[${rep.data?.nextToken}]");
-
-    return PaginationResponse(list: missions.whereType<Mission>().toList(), nextToken: rep.data?.nextToken);
-  }
-
-  static Future<PaginatedResult<Mission>?> loadMission2(
-      [PaginatedResult<Mission>? previousPage, int limit = 50]) async {
-    safePrint(">>>> loadMission(${previousPage?.hasNextResult}, $limit)");
-    if (previousPage == null) {
-      final req = ModelQueries.list(Mission.classType, limit: limit);
-      final rep = await Amplify.API.query(request: req).response;
-      safePrint(">>>> loadMission REP = rep=[$rep]");
-      if (rep.hasErrors) throw rep.errors;
-      return rep.data;
-    } else if (previousPage.hasNextResult) {
-      final req = previousPage.requestForNextResult;
-      final rep = await Amplify.API.query(request: req!).response;
-      safePrint(">>>> loadMission more REP = rep=[$rep]");
-      if (rep.hasErrors) throw rep.errors;
-      return rep.data;
-    }
-    return null;
+    final data = await Api.graphql(
+        r'query MyQuery($limit: Int, $nextToken: String) { listMissions(limit: $limit, nextToken: $nextToken) { items { '
+        r'id owner createdAt daysOfWeek generateDayBefore livreurID name startLatitude startLongitude startName startTime startTimeZone deliveryChecking '
+        r'subscribers(limit: 200, filter: {unsubscribed: {eq: false}}) { items { id owner latitude longitude name type nb } nextToken } '
+        r'inscriptions { items { id owner livreurID } nextToken } updatedAt } nextToken } }',
+        {'limit': limit, 'nextToken': nextToken});
+    final page = data['listMissions'] as Map;
+    final missions = listOf(page['items'])!.map(Mission.fromJson).toList();
+    safePrint(">>>> loadMissions REP = missions=[${missions.length}] - nextToken=[${page['nextToken']}]");
+    return PaginationResponse(list: missions, nextToken: page['nextToken'] as String?);
   }
 
   static Future<PaginationResponse<Colis>> loadColis(String tourneeId, [String? nextToken, int limit = 50]) async {
     safePrint(">>>> loadColis($tourneeId, $nextToken, $limit)");
-
-    const String query = '''
-      query ByTourneeOrderPosition(
-        \$tourneeId: ID!
-        \$sortDirection: ModelSortDirection
-        \$limit: Int
-        \$nextToken: String
-      ) {
-        byTourneeOrderPosition(
-          tourneeColisId: \$tourneeId
-          sortDirection: \$sortDirection
-          limit: \$limit
-          nextToken: \$nextToken
-        ) {
-          items {
-            id
-            owner
-            tourneeColisId
-            position
-            polyline
-            distance
-            duration
-            createdAt
-            updatedAt
-            address
-            longitude
-            latitude
-            subscriberColisId
-            subscriberName
-            colisLastStatusId
-            lastStatus {
-              id
-              owner
-              status
-              createdAt
-            }
-            tournee {
-              id
-            }
-            subscriber {
-              id
-              owner
-              name
-              phone1
-              phone2
-              instructions
-              numabo
-              __typename
-            }
-            __typename
-          }
-          nextToken
-          __typename
-        }
-      }
-''';
-    var req = GraphQLRequest<PaginatedResult<Colis>>(
-        document: query,
-        modelType: const PaginatedModelType(Colis.classType),
-        variables: {'tourneeId': tourneeId, 'sortDirection': 'ASC', 'limit': limit, 'nextToken': nextToken},
-        decodePath: "byTourneeOrderPosition");
-
-    final rep = await Amplify.API.query(request: req).response;
-    if (rep.hasErrors) throw rep.errors;
-    var listColis = rep.data?.items ?? List.empty();
-
-    safePrint(">>>> loadColis REP = listColis=[${listColis.length}] - nextToken=[${rep.data?.nextToken}]");
-
-    return PaginationResponse(
-        list: listColis.where((colis) => colis != null).toList().cast<Colis>(), nextToken: rep.data?.nextToken);
+    final data = await Api.graphql(
+        'query ByTourneeOrderPosition(\$tourneeId: ID!, \$sortDirection: ModelSortDirection, \$limit: Int, \$nextToken: String) { '
+        'byTourneeOrderPosition(tourneeColisId: \$tourneeId, sortDirection: \$sortDirection, limit: \$limit, nextToken: \$nextToken) { '
+        'items { $_colisFields } nextToken } }',
+        {'tourneeId': tourneeId, 'sortDirection': 'ASC', 'limit': limit, 'nextToken': nextToken});
+    final page = data['byTourneeOrderPosition'] as Map;
+    final listColis = listOf(page['items'])!.map(Colis.fromJson).toList();
+    safePrint(">>>> loadColis REP = listColis=[${listColis.length}] - nextToken=[${page['nextToken']}]");
+    return PaginationResponse(list: listColis, nextToken: page['nextToken'] as String?);
   }
 
   static Future<Colis?> updateColis(Colis updateColis) async {
     safePrint(">>>> updateColis($updateColis)");
-    final req = ModelMutations.update(updateColis);
-    final rep = await Amplify.API.mutate(request: req).response;
-    safePrint(">>>> updateColis REP = rep=[$rep]");
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final data = await Api.graphql('mutation U(\$input: UpdateColisInput!) { updateColis(input: \$input) { $_colisFields } }',
+        {'input': updateColis.toInput()});
+    final c = _obj(data, 'updateColis');
+    return c == null ? null : Colis.fromJson(c);
   }
 
   static var lockUpdateLocation = Lock();
@@ -326,17 +122,12 @@ class API {
       String userId, String? userName, List<Tournee> listTourneeInProgress, double lat, double lng) async {
     await lockUpdateLocation.synchronized(() async {
       safePrint(">>>> updateLocation($userId, $listTourneeInProgress, $lat, $lng)");
-
-      final request = ModelQueries.list(
-        Location.classType,
-        where: Location.USERID.eq(userId),
-      );
-      final rep = await Amplify.API.query(request: request).response;
-      if (rep.hasErrors) throw rep.errors;
-      final allLocationOfUser = rep.data?.items ?? <Location?>[];
+      final data = await Api.graphql(
+          'query L(\$userId: ID!) { listLocations(filter: { userId: { eq: \$userId } }, limit: 1000) { items { $_locationFields } } }',
+          {'userId': userId});
+      final allLocationOfUser = listOf((data['listLocations'] as Map)['items'])!.map(Location.fromJson).toList();
 
       for (final location in allLocationOfUser) {
-        if (location == null) break;
         Tournee? tourneeOfLocartion;
         try {
           tourneeOfLocartion = listTourneeInProgress.firstWhere((tournee) => tournee.id == location.tourneeId);
@@ -351,19 +142,17 @@ class API {
               latitude: lat,
               longitude: lng,
               lastUpdate: TemporalDateTime.now());
-          final req = ModelMutations.update(updateLocation);
-          final rep = await Amplify.API.mutate(request: req).response;
-          safePrint(">>>> updateLocation REP = rep=[${rep.data?.latitude}, ${rep.data?.longitude}]");
-          if (rep.hasErrors) throw rep.errors;
+          await Api.graphql('mutation U(\$input: UpdateLocationInput!) { updateLocation(input: \$input) { $_locationFields } }',
+              {'input': updateLocation.toInput()});
           listTourneeInProgress.remove(tourneeOfLocartion);
         } else {
-          final req = ModelMutations.deleteById(Location.classType, LocationModelIdentifier(id: location.id));
-          final rep = await Amplify.API.mutate(request: req).response;
-          safePrint(">>>> deleteLocation REP = rep=[$rep]");
+          await Api.graphql(r'mutation D($input: DeleteLocationInput!) { deleteLocation(input: $input) { id } }', {
+            'input': {'id': location.id}
+          });
         }
       }
       for (final tournee in listTourneeInProgress) {
-        final updateLocation = Location(
+        final newLocation = Location(
             owner: tournee.owner,
             userId: userId,
             tourneeId: tournee.id,
@@ -371,38 +160,32 @@ class API {
             latitude: lat,
             longitude: lng,
             lastUpdate: TemporalDateTime.now());
-        final req = ModelMutations.create(updateLocation);
-        final rep = await Amplify.API.mutate(request: req).response;
-        safePrint(">>>> createLocation REP = rep=[$rep]");
-        if (rep.hasErrors) throw rep.errors;
+        await Api.graphql('mutation C(\$input: CreateLocationInput!) { createLocation(input: \$input) { $_locationFields } }',
+            {'input': newLocation.toInput()});
       }
     });
   }
 
   static Future<Tournee?> updateTournee(Tournee updateTournee) async {
     safePrint(">>>> updateTournee($updateTournee)");
-    final req = ModelMutations.update(updateTournee);
-    final rep = await Amplify.API.mutate(request: req).response;
-    safePrint(">>>> updateTournee REP = rep=[$rep]");
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final data = await Api.graphql('mutation U(\$input: UpdateTourneeInput!) { updateTournee(input: \$input) { $_tourneeFields } }',
+        {'input': updateTournee.toInput()});
+    final t = _obj(data, 'updateTournee');
+    return t == null ? null : Tournee.fromJson(t);
   }
 
   static Future<Tournee?> getTournee(String tourneeId) async {
     safePrint(">>>> getTournee($tourneeId)");
-    final req = ModelQueries.get(Tournee.classType, TourneeModelIdentifier(id: tourneeId));
-    final rep = await Amplify.API.query(request: req).response;
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final data = await Api.graphql('query G(\$id: ID!) { getTournee(id: \$id) { $_tourneeFields } }', {'id': tourneeId});
+    final t = _obj(data, 'getTournee');
+    return t == null ? null : Tournee.fromJson(t);
   }
 
   static Future<Colis?> getColis(String colisId) async {
     safePrint(">>>> getColis($colisId)");
-    final req = ModelQueries.get(Colis.classType, ColisModelIdentifier(id: colisId));
-    final rep = await Amplify.API.query(request: req).response;
-    safePrint(">>>> getColis REP = rep=[$rep]");
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final data = await Api.graphql('query G(\$id: ID!) { getColis(id: \$id) { $_colisFields } }', {'id': colisId});
+    final c = _obj(data, 'getColis');
+    return c == null ? null : Colis.fromJson(c);
   }
 
   static Future<ColisStatus?> createColisStatus(
@@ -415,29 +198,26 @@ class API {
     TemporalDateTime? createdAt,
   }) async {
     safePrint(">>>> createColisStatus($status, id=$id)");
-    final req = ModelMutations.create(
-      ColisStatus(
-        id: id,
-        owner: colis.owner,
-        colis: colis,
-        status: status,
-        message: message,
-        createdAt: createdAt ?? TemporalDateTime.now(),
-        latitude: latitude,
-        longitude: longitude,
-      ),
-    );
-    final rep = await Amplify.API.mutate(request: req).response;
-    safePrint(">>>> createColisStatus REP = rep=[$rep]");
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final input = ColisStatus(
+      id: id,
+      owner: colis.owner,
+      colis: colis,
+      status: status,
+      message: message,
+      createdAt: createdAt ?? TemporalDateTime.now(),
+      latitude: latitude,
+      longitude: longitude,
+    ).toInput();
+    final data = await Api.graphql(
+        'mutation C(\$input: CreateColisStatusInput!) { createColisStatus(input: \$input) { $_colisStatusFields } }', {'input': input});
+    final st = _obj(data, 'createColisStatus');
+    return st == null ? null : ColisStatus.fromJson(st);
   }
 
   static Future<ColisStatus?> getColisStatus(String id) async {
-    final req = ModelQueries.get(ColisStatus.classType, ColisStatusModelIdentifier(id: id));
-    final rep = await Amplify.API.query(request: req).response;
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final data = await Api.graphql('query G(\$id: ID!) { getColisStatus(id: \$id) { $_colisStatusFields } }', {'id': id});
+    final st = _obj(data, 'getColisStatus');
+    return st == null ? null : ColisStatus.fromJson(st);
   }
 
   /// Idempotently applies a colis status change to the backend: creates the
@@ -487,20 +267,19 @@ class API {
 
   static Future<Inscription?> createInscription(Inscription inscription) async {
     safePrint(">>>> createInscription($inscription)");
-    final req = ModelMutations.create(inscription);
-    final rep = await Amplify.API.mutate(request: req).response;
-    safePrint(">>>> createInscription REP = rep=[$rep]");
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final data = await Api.graphql(
+        'mutation C(\$input: CreateInscriptionInput!) { createInscription(input: \$input) { $_inscriptionFields } }', {'input': inscription.toInput()});
+    final i = _obj(data, 'createInscription');
+    return i == null ? null : Inscription.fromJson(i);
   }
 
   static Future<Inscription?> deleteInscription(Inscription inscription) async {
     safePrint(">>>> deleteInscription($inscription)");
-    final req = ModelMutations.deleteById(Inscription.classType, InscriptionModelIdentifier(id: inscription.id));
-    final rep = await Amplify.API.mutate(request: req).response;
-    safePrint(">>>> deleteInscription REP = rep=[$rep]");
-    if (rep.hasErrors) throw rep.errors;
-    return rep.data;
+    final data = await Api.graphql(
+        'mutation D(\$input: DeleteInscriptionInput!) { deleteInscription(input: \$input) { $_inscriptionFields } }', {
+      'input': {'id': inscription.id}
+    });
+    final i = _obj(data, 'deleteInscription');
+    return i == null ? null : Inscription.fromJson(i);
   }
-
 }

@@ -1,6 +1,8 @@
 import 'dart:async';
 
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'dart:io' show SocketException;
+
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wabap/utils/retry.dart';
 
@@ -8,12 +10,16 @@ void main() {
   group('isRetryableError', () {
     test('timeouts and network errors are retryable', () {
       expect(isRetryableError(TimeoutException('slow')), isTrue);
-      expect(isRetryableError(const NetworkException('offline')), isTrue);
+      expect(isRetryableError(const SocketException('offline')), isTrue);
+      expect(isRetryableError(const AuthException(AuthFailure.network, 'offline')), isTrue);
+      expect(isRetryableError(const ApiException('Erreur 503', statusCode: 503)), isTrue);
     });
 
     test('auth errors are NOT retryable', () {
-      expect(isRetryableError(const AuthNotAuthorizedException('nope')), isFalse);
-      expect(isRetryableError(const SessionExpiredException('expired')), isFalse);
+      expect(isRetryableError(const AuthException(AuthFailure.wrongPassword, 'nope')), isFalse);
+      expect(isRetryableError(const AuthException(AuthFailure.sessionExpired, 'expired')), isFalse);
+      expect(isRetryableError(const ApiException('Accès refusé', errorType: 'Unauthorized', statusCode: 200)), isFalse);
+      expect(isRetryableError(const ApiException('Jeton absent', statusCode: 401)), isFalse);
     });
 
     test('GraphQL unauthorized/validation messages are NOT retryable', () {
@@ -55,9 +61,9 @@ void main() {
       await expectLater(
         retryWithBackoff(() async {
           attempts++;
-          throw const AuthNotAuthorizedException('expired');
+          throw const AuthException(AuthFailure.sessionExpired, 'expired');
         }, retryIf: isRetryableError, baseDelay: const Duration(milliseconds: 1)),
-        throwsA(isA<AuthNotAuthorizedException>()),
+        throwsA(isA<AuthException>()),
       );
       expect(attempts, 1);
     });

@@ -1,4 +1,4 @@
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wabap/models/Status.dart';
 import 'package:wabap/models/Tournee.dart';
@@ -97,7 +97,7 @@ class TourneeNotifier extends StateNotifier<AsyncValue<List<Tournee>>> {
     // 1. Local-first persistence, scoped to the signed-in account.
     String? enqueuedBy;
     try {
-      enqueuedBy = (await Amplify.Auth.getCurrentUser()).userId;
+      enqueuedBy = (await CognitoAuth.instance.currentSession())?.sub;
     } catch (_) {}
     await LocalColisStatusStore.instance
         .upsertPendingTourneeStatus(PendingTourneeStatus(

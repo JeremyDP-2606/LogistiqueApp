@@ -12,7 +12,7 @@ function createS3Files({ bucket, region, endpoint }) {
   return {
     // Les étiquettes contiennent des adresses : fichiers privés, lien valable 15 minutes
     async put(key, bytes, contentType) {
-      const k = key.startsWith('private-') || key.startsWith('proofs/') ? key : `private-labels/${key}`;
+      const k = /^(private-|proofs\/|public\/)/.test(key) ? key : `private-labels/${key}`;
       await s3.send(new PutObjectCommand({ Bucket: bucket, Key: k, Body: bytes, ContentType: contentType }));
       return { key: k, url: await getUrl(k) };
     },
@@ -41,7 +41,7 @@ function createLocalFiles({ dir, publicUrl }) {
   return {
     dir,
     async put(key, bytes) {
-      const k = key.startsWith('private-') || key.startsWith('proofs/') ? key : `private-labels/${key}`;
+      const k = /^(private-|proofs\/|public\/)/.test(key) ? key : `private-labels/${key}`;
       fs.mkdirSync(path.dirname(safe(k)), { recursive: true });
       fs.writeFileSync(safe(k), Buffer.from(bytes));
       return { key: k, url: `${base()}/files/${encodeURIComponent(k)}` };

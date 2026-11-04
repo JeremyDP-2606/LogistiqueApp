@@ -32,9 +32,6 @@ dependencies:
     sdk: flutter
 
 
-  amplify_flutter: ^1.0.0
-  amplify_api: ^1.0.0
-  amplify_auth_cognito: ^1.0.0
   flutter_riverpod: ^2.4.4
   flutter_hooks: ^0.20.1
   hooks_riverpod: ^2.4.0
@@ -47,12 +44,10 @@ dependencies:
   synchronized: ^3.1.0
   signature: ^5.3.2   # Check for the latest version
   image_picker: ^1.0.7 # check lastest version
-  amplify_storage_s3: ^1.0.0
   mobile_scanner: ^3.5.5
   logging: ^1.2.0
   image: ^4.0.0
   path_provider: ^2.0.0
-  aws_common: ^0.6.5
   async: ^2.11.0
   pool: ^1.5.0
   sqflite: ^2.3.0
@@ -62,6 +57,10 @@ dependencies:
 
   # Wabap V2 : courses à la demande
   http: ^1.2.2
+  intl: ^0.19.0
+  amazon_cognito_identity_dart_2: ^3.6.0
+  web_socket_channel: ^3.0.0
+  shared_preferences: ^2.3.0
   flutter_stripe: ^11.5.0
 
 

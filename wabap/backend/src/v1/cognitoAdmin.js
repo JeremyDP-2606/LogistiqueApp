@@ -1,9 +1,10 @@
 // Administration des utilisateurs Cognito pour le back-office V1 (autrefois faite depuis le navigateur
-// avec des identifiants AWS du pool d'identités). Droits vérifiés ici :
-//  - équipe Wabap (groupes wabap, admin) : tous les utilisateurs, tous les groupes ;
-//  - client (groupe client, attribut custom:clientName) : uniquement les utilisateurs de son compte,
-//    groupes « client » et « livreur » seulement, attribut custom:clientName imposé.
-const CLIENT_ASSIGNABLE_GROUPS = ['client', 'livreur'];
+// avec des identifiants AWS du pool d'identités). Mêmes règles que l'écran V1, appliquées ici :
+//  - utilisateur rattaché à un client (attribut custom:clientName) : uniquement les comptes de ce client,
+//    attribut custom:clientName imposé ;
+//  - équipe Wabap (groupe wabap, ou admin sans client) : tous les comptes ;
+//  - consultation : groupes wabap, admin, client (« Contrôleur ») ; modification : wabap, admin.
+const V1_GROUPS = ['admin', 'livreur', 'client'];
 
 function createCognitoAdmin({ config, client }) {
   let cognito = client;
@@ -15,9 +16,11 @@ function createCognitoAdmin({ config, client }) {
   };
   const attr = (u, name) => (u.Attributes || u.UserAttributes || []).find((a) => a.Name === name)?.Value;
   const forbidden = (msg = 'Accès refusé') => Object.assign(new Error(msg), { status: 403 });
-  const isStaff = (id) => id.groups.some((g) => ['wabap', 'admin'].includes(g));
   const clientOf = (id) => id.claims['custom:clientName'] || null;
-  const canManage = (id) => isStaff(id) || (id.groups.includes('client') && clientOf(id));
+  const isStaff = (id) => !clientOf(id) && id.groups.some((g) => ['wabap', 'admin'].includes(g));
+  const canRead = (id) => id.groups.some((g) => ['wabap', 'admin', 'client'].includes(g)) && (isStaff(id) || clientOf(id));
+  const canWrite = (id) => id.groups.some((g) => ['wabap', 'admin'].includes(g));
+  const canManage = canRead;
 
   async function listAll(filter) {
     const { send } = sdk();
@@ -43,7 +46,7 @@ function createCognitoAdmin({ config, client }) {
     if (attr(u, 'custom:clientName') !== clientOf(identity)) throw forbidden();
   }
   const checkGroup = (identity, group) => {
-    if (!isStaff(identity) && !CLIENT_ASSIGNABLE_GROUPS.includes(group)) throw forbidden(`Groupe non autorisé : ${group}`);
+    if (!isStaff(identity) && !V1_GROUPS.includes(group)) throw forbidden(`Groupe non autorisé : ${group}`);
   };
 
   return {
@@ -66,7 +69,7 @@ function createCognitoAdmin({ config, client }) {
       return (r.Groups || []).map((g) => g.GroupName);
     },
     async create(identity, { username, firstName, lastName, email, password, group, clientName, deliveryChecking }) {
-      if (!canManage(identity)) throw forbidden();
+      if (!canWrite(identity)) throw forbidden();
       if (!username || !email || !password || !group) throw Object.assign(new Error('Identifiant, e-mail, mot de passe et groupe requis'), { status: 400 });
       checkGroup(identity, group);
       const { send } = sdk();
@@ -85,7 +88,7 @@ function createCognitoAdmin({ config, client }) {
       return { ok: true };
     },
     async update(identity, username, u) {
-      if (!canManage(identity)) throw forbidden();
+      if (!canWrite(identity)) throw forbidden();
       await checkTarget(identity, username);
       const { send } = sdk();
       await send('AdminUpdateUserAttributesCommand', {
@@ -109,7 +112,7 @@ function createCognitoAdmin({ config, client }) {
       return { ok: true };
     },
     async remove(identity, username) {
-      if (!canManage(identity)) throw forbidden();
+      if (!canWrite(identity)) throw forbidden();
       await checkTarget(identity, username);
       await sdk().send('AdminDeleteUserCommand', { Username: username });
       return { ok: true };
@@ -117,4 +120,4 @@ function createCognitoAdmin({ config, client }) {
   };
 }
 
-module.exports = { createCognitoAdmin, CLIENT_ASSIGNABLE_GROUPS };
+module.exports = { createCognitoAdmin, V1_GROUPS };

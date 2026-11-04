@@ -94,7 +94,7 @@ test('preuves : lien d\'envoi temporaire puis dépôt du fichier (stockage local
   } finally { await s.close(); }
 });
 
-test('utilisateurs Cognito : un client ne gère que les comptes de son entreprise', async () => {
+test('utilisateurs Cognito : un administrateur client ne gère que les comptes de son entreprise', async () => {
   const users = [
     { Username: 'fa-livreur', Attributes: [{ Name: 'sub', Value: 's1' }, { Name: 'custom:clientName', Value: 'France-Antilles' }] },
     { Username: 'autre-livreur', Attributes: [{ Name: 'sub', Value: 's2' }, { Name: 'custom:clientName', Value: 'Autre' }] },
@@ -116,13 +116,16 @@ test('utilisateurs Cognito : un client ne gère que les comptes de son entrepris
   const base = `http://127.0.0.1:${server.address().port}`;
   const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
   const tok = (who) => `${b64({})}.${b64({ ...who.claims, exp: Math.floor(Date.now() / 1000) + 600 })}.x`;
-  const clientFA = identity('chef-fa', { groups: ['client'], clientName: 'France-Antilles' });
+  const clientFA = identity('chef-fa', { groups: ['admin'], clientName: 'France-Antilles' });
+  const controleur = identity('ctrl-fa', { groups: ['client'], clientName: 'France-Antilles' });
   const call = (who, method, path, body) => fetch(`${base}/v1${path}`, { method, headers: { 'content-type': 'application/json', authorization: tok(who) }, body: body && JSON.stringify(body) });
   try {
     const list = await (await call(clientFA, 'GET', '/admin/users')).json();
     assert.deepEqual(list.map((u) => u.Username), ['fa-livreur']);
     assert.equal((await call(clientFA, 'DELETE', '/admin/users/autre-livreur')).status, 403);
-    assert.equal((await call(clientFA, 'POST', '/admin/users', { username: 'x', email: 'x@y.z', password: 'Motdepasse1', group: 'admin' })).status, 403);
+    assert.equal((await call(clientFA, 'POST', '/admin/users', { username: 'x', email: 'x@y.z', password: 'Motdepasse1', group: 'wabap' })).status, 403);
+    assert.equal((await call(controleur, 'GET', '/admin/users')).status, 200); // consultation seule
+    assert.equal((await call(controleur, 'DELETE', '/admin/users/fa-livreur')).status, 403);
     assert.equal((await call(clientFA, 'POST', '/admin/users', { username: 'x', email: 'x@y.z', password: 'Motdepasse1', group: 'livreur', clientName: 'Autre' })).status, 200);
     const created = sent.find(([n]) => n === 'AdminCreateUserCommand')[1];
     assert.equal(created.UserAttributes.find((a) => a.Name === 'custom:clientName').Value, 'France-Antilles'); // imposé

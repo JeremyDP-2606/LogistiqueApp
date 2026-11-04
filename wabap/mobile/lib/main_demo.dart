@@ -5,19 +5,16 @@
 //
 // Différences avec l'app réelle :
 //  - utilisateur déjà connecté (profil fictif, sans Cognito) ;
-//  - API GraphQL servie par tools/mock-appsync (vraie logique de la fonction deliveryApi) ;
+//  - API servie par le serveur Wabap en mode démonstration (backend : DEMO_SEED=true, données fictives) ;
 //  - paiement Stripe, appareil photo, scanner et envoi des preuves simulés (DemoHooks).
-import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'colors.dart';
-import 'models/ModelProvider.dart';
 import 'provider/auth_provider.dart';
 import 'theme.dart';
 import 'v2/demo_hooks.dart';
@@ -67,24 +64,9 @@ int _uploads = 0;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final persona = personas[Uri.base.queryParameters['persona']] ?? personas['client']!;
-  await Amplify.addPlugin(AmplifyAPI(modelProvider: ModelProvider.instance));
-  await Amplify.configure(jsonEncode({
-    'UserAgent': 'aws-amplify-cli/2.0',
-    'Version': '1.0',
-    'api': {
-      'plugins': {
-        'awsAPIPlugin': {
-          'wabap': {
-            'endpointType': 'GraphQL',
-            'endpoint': Uri.base.queryParameters['api'] ?? 'https://api.wabap-demo.test/graphql',
-            'region': 'us-east-1',
-            'authorizationType': 'API_KEY',
-            'apiKey': persona.apiKey,
-          }
-        }
-      }
-    }
-  }));
+  // Serveur Wabap en mode démonstration (AUTH_MODE=dev) : jeton de démo du profil choisi
+  Api.endpoint = Uri.base.queryParameters['api'] ?? 'https://api.wabap-demo.test/graphql';
+  Api.tokenProvider = () async => persona.apiKey;
 
   DemoHooks.pay = (_) => _demoPaymentSheet();
   DemoHooks.takePhoto = _demoPhoto;

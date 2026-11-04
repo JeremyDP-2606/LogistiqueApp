@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,8 +10,7 @@ import 'package:wabap/main.dart' show WabapApp;
 final authProvider = ChangeNotifierProvider<AuthModel>((ref) => AuthModel());
 
 class AuthModel extends ChangeNotifier {
-  CognitoAuthSession? _sessionValue;
-  List<AuthUserAttribute>? _userAttValue;
+  AuthSessionInfo? _sessionValue;
   bool _isLoadingValue = false;
   String? _tmpUserId;
   String? _tmpName;
@@ -32,37 +30,24 @@ class AuthModel extends ChangeNotifier {
   DateTime? _lastFetchAttempt;
   static const Duration _fetchRetryCooldown = Duration(seconds: 5);
 
-  bool _fetchingAttributes = false;
   bool _signingOut = false;
   bool _disposed = false;
 
-  StreamSubscription<AuthHubEvent>? _hubSubscription;
+  StreamSubscription<AuthEvent>? _authSubscription;
 
-  /// Whether [session] can actually be used.
-  ///
-  /// [CognitoAuthSession.isSignedIn] alone is NOT enough. When the refresh
-  /// token has expired, fetch_auth_session_state_machine.dart catches the
-  /// failure, stores `AuthResult.error(SessionExpiredException(...))` in
-  /// userPoolTokensResult, and STILL reports `isSignedIn: true` because the
-  /// stale in-memory tokens are non-null. fetchAuthSession() does not throw;
-  /// every downstream `.value` read does, synchronously, inside build().
+  /// Session utilisable : jeton d'identité valide (rafraîchi par [CognitoAuth.currentSession]).
   @visibleForTesting
-  static bool isUsableSession(CognitoAuthSession? session) =>
-      session != null && session.isSignedIn && session.userPoolTokensResult.valueOrNull != null;
+  static bool isUsableSession(AuthSessionInfo? session) => session != null;
 
-  // Getters. All of them go through `valueOrNull`, never `.value`: on an
-  // errored AWSResult `.value` rethrows, and these are read from build().
-  String? get myId => _tmpUserId ?? _getSession()?.userSubResult.valueOrNull;
+  String? get myId => _tmpUserId ?? _getSession()?.sub;
 
-  String? get myTrueId => _getSession()?.userSubResult.valueOrNull;
+  String? get myTrueId => _getSession()?.sub;
 
-  bool get isAdmin =>
-      _getSession()?.userPoolTokensResult.valueOrNull?.idToken.groups.contains('admin') ?? false;
+  bool get isAdmin => _getSession()?.groups.contains('admin') ?? false;
 
-  bool get isSuperAdmin =>
-      _getSession()?.userPoolTokensResult.valueOrNull?.idToken.groups.contains('wabap') ?? false;
+  bool get isSuperAdmin => _getSession()?.groups.contains('wabap') ?? false;
 
-  List<String> get groups => _getSession()?.userPoolTokensResult.valueOrNull?.idToken.groups ?? const [];
+  List<String> get groups => _getSession()?.groups ?? const [];
 
   bool get isCourier => groups.contains('livreur');
 
@@ -77,7 +62,7 @@ class AuthModel extends ChangeNotifier {
   String? get name {
     if (_tmpName != null) return _tmpName;
     final giveName = getAttribute("given_name");
-    return giveName ?? _getSession()?.userPoolTokensResult.valueOrNull?.username;
+    return giveName ?? _getSession()?.username;
   }
 
   String? get clientName {
@@ -103,29 +88,19 @@ class AuthModel extends ChangeNotifier {
     _safeNotify();
   }
 
-  set _session(CognitoAuthSession? value) {
+  set _session(AuthSessionInfo? value) {
     _sessionValue = value;
     _sessionResolved = isUsableSession(value);
-    unawaited(fetchUserAttribute());
     _safeNotify();
   }
 
-  String? getAttribute(String name) {
-    if (_userAttValue != null) {
-      for (var att in _userAttValue!) {
-        if (att.userAttributeKey.key == name.toLowerCase()) {
-          return att.value;
-        }
-      }
-    }
-    return null;
-  }
+  /// Attribut de l'utilisateur (given_name, email, custom:clientName…), lu dans le jeton d'identité
+  String? getAttribute(String name) => _sessionValue?.attribute(name);
 
   /// Wipes every trace of the previous account and sends the UI back to the
   /// root route. Does NOT sign out of Cognito — see [_forceSignOut] for that.
   void _clearSession() {
     _sessionValue = null;
-    _userAttValue = null;
     _tmpUserId = null;
     _tmpName = null;
     _tmpClientName = null; // logout() used to leak this to the next account
@@ -151,7 +126,7 @@ class AuthModel extends ChangeNotifier {
     _signingOut = true;
     safePrint('AuthModel: forced sign-out ($reason)');
     try {
-      await Amplify.Auth.signOut().timeout(const Duration(seconds: 15));
+      await CognitoAuth.instance.signOut().timeout(const Duration(seconds: 15));
     } catch (e) {
       // Must never block the recovery.
       safePrint('AuthModel: signOut failed during forced sign-out, ignored: $e');
@@ -162,7 +137,7 @@ class AuthModel extends ChangeNotifier {
   }
 
   /// notifyListeners() is reachable from paths that can run while Flutter is
-  /// mid-build (a getter read during build kicks fetchSession(); an Amplify hub
+  /// mid-build (a getter read during build kicks fetchSession(); an auth
   /// event can land on any event-loop turn). Notifying then throws
   /// "setState() or markNeedsBuild() called during build", and [_clearSession]
   /// also touches the Navigator. Defer whenever that is the case.
@@ -184,48 +159,35 @@ class AuthModel extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
-    _hubSubscription?.cancel();
-    _hubSubscription = null;
+    _authSubscription?.cancel();
+    _authSubscription = null;
     super.dispose();
   }
 
-  /// Must be called AFTER Amplify.configure() and BEFORE the first
-  /// [fetchSession]: the Amplify hub is a broadcast stream, so events emitted
-  /// before we subscribe are lost — and the launch-time SESSION_EXPIRED is
-  /// emitted by that very first fetch.
+  /// Écoute les événements de session (connexion, déconnexion, session expirée).
+  /// À appeler avant le premier [fetchSession].
   void initHubListener() {
-    if (_hubSubscription != null) return;
-    _hubSubscription = Amplify.Hub.listen(
-      HubChannel.Auth,
-      (AuthHubEvent event) {
-        // Must never throw: listen() uses cancelOnError, so an escaping
-        // exception would kill this subscription for the whole process.
-        try {
-          switch (event.type) {
-            case AuthHubEventType.signedIn:
-              _sessionResolved = false;
-              _lastFetchAttempt = null;
-              unawaited(fetchSession());
-              break;
-            case AuthHubEventType.sessionExpired:
-              unawaited(_forceSignOut('hub: session expired'));
-              break;
-            case AuthHubEventType.signedOut:
-            case AuthHubEventType.userDeleted:
-              _clearSession();
-              break;
-          }
-        } catch (e) {
-          safePrint('AuthModel: error handling hub ${event.type}: $e');
+    if (_authSubscription != null) return;
+    _authSubscription = CognitoAuth.instance.events.listen((event) {
+      // Ne doit jamais lever d'exception : l'abonnement serait perdu.
+      try {
+        switch (event) {
+          case AuthEvent.signedIn:
+            _sessionResolved = false;
+            _lastFetchAttempt = null;
+            unawaited(fetchSession());
+            break;
+          case AuthEvent.sessionExpired:
+            unawaited(_forceSignOut('session expired'));
+            break;
+          case AuthEvent.signedOut:
+            _clearSession();
+            break;
         }
-      },
-      onError: (Object e, StackTrace s) {
-        // cancelOnError means the subscription is already dead here.
-        safePrint('AuthModel: auth hub stream error: $e');
-        _hubSubscription = null;
-        _runWhenSafe(initHubListener);
-      },
-    );
+      } catch (e) {
+        safePrint('AuthModel: error handling auth event $event: $e');
+      }
+    });
   }
 
   /// Never throws and never completes with an error: it is awaited by
@@ -258,45 +220,32 @@ class AuthModel extends ChangeNotifier {
 
   Future<void> _doFetchSession() async {
     try {
-      final rep = await Amplify.Auth.fetchAuthSession().timeout(const Duration(seconds: 30));
-      if (rep is! CognitoAuthSession || !rep.isSignedIn) {
+      final session = await CognitoAuth.instance.currentSession().timeout(const Duration(seconds: 30));
+      if (session == null) {
         _clearSession();
         return;
       }
-
-      if (rep.userPoolTokensResult.valueOrNull == null) {
-        // THE BUG: isSignedIn is true but the tokens are unusable because the
-        // refresh token expired. fetchAuthSession() did NOT throw, so the
-        // `on SessionExpiredException` catch below never fired and the broken
-        // session used to be stored — then `.value` threw inside build().
-        final cause = rep.userPoolTokensResult.exception;
-        await _forceSignOut('signed in without usable tokens (${cause.runtimeType})');
-        return;
-      }
-
-      _sessionValue = rep;
+      _sessionValue = session;
       _sessionResolved = true;
-      await fetchUserAttribute();
       _safeNotify();
-    } on SessionExpiredException catch (e) {
-      await _forceSignOut('session expired: ${e.message}');
-    } on AuthNotAuthorizedException catch (e) {
-      await _forceSignOut('not authorized: ${e.message}');
-    } on SignedOutException {
-      _clearSession();
+    } on AuthException catch (e) {
+      if (e.failure == AuthFailure.sessionExpired) {
+        await _forceSignOut('session expired: ${e.message}');
+      } else if (e.failure == AuthFailure.network) {
+        // Hors ligne : ne PAS déconnecter le livreur (zone blanche en pleine tournée, session valide,
+        // file d'attente hors ligne rattachée à myTrueId).
+        safePrint('fetchSession: network error (${e.message}), keeping state.');
+      } else {
+        safePrint('fetchSession: unexpected error, keeping state: $e');
+      }
     } on TimeoutException {
-      // Offline / slow network. Do NOT sign the driver out: they may be in a
-      // dead zone mid-tournee with a perfectly valid session, and the offline
-      // queue scopes its entries with myTrueId.
       safePrint('fetchSession: timed out, keeping state.');
-    } on NetworkException catch (e) {
-      safePrint('fetchSession: network error (${e.message}), keeping state.');
     } catch (e) {
       safePrint('fetchSession: unexpected error, keeping state: $e');
     }
   }
 
-  CognitoAuthSession? _getSession() {
+  AuthSessionInfo? _getSession() {
     // Fire-and-forget: these getters are read from build() and must stay
     // synchronous. fetchSession() coalesces concurrent calls, rate-limits
     // retries and never completes with an error, so discarding it is safe.
@@ -305,32 +254,16 @@ class AuthModel extends ChangeNotifier {
     return isUsableSession(_sessionValue) ? _sessionValue : null;
   }
 
-  Future<void> fetchUserAttribute() async {
-    if (_fetchingAttributes) return;
-    // Deliberately not isLogin(): that goes through _getSession() ->
-    // fetchSession() and would re-enter while we are inside it.
-    if (!isUsableSession(_sessionValue) || _userAttValue != null) return;
-
-    _fetchingAttributes = true;
-    try {
-      _userAttValue = await Amplify.Auth.fetchUserAttributes().timeout(const Duration(seconds: 30));
-      _safeNotify();
-    } catch (e) {
-      // Attributes are cosmetic (given_name / custom:clientName). They must
-      // never brick the app; the next fetchSession() retries them.
-      safePrint('fetchUserAttribute ignored: $e');
-    } finally {
-      _fetchingAttributes = false;
-    }
-  }
+  /// Les attributs sont lus dans le jeton d'identité : rien à télécharger.
+  Future<void> fetchUserAttribute() async {}
 
   bool isLogin() => _getSession() != null;
 
   logout() async {
     try {
-      await Amplify.Auth.signOut();
-    } on AuthException catch (e) {
-      safePrint(e.message);
+      await CognitoAuth.instance.signOut();
+    } catch (e) {
+      safePrint('logout: $e');
     }
     _clearSession();
   }
@@ -339,68 +272,40 @@ class AuthModel extends ChangeNotifier {
     AuthError? error;
     _isLoading = true;
     try {
-      final result = await Amplify.Auth.signIn(
-        username: username,
-        password: password,
-      );
-      error = await _handleSignInResult(result);
+      final step = await CognitoAuth.instance.signIn(username, password);
+      error = await _afterSignIn(step);
     } on AuthException catch (e) {
-      if (e is UserNotFoundException) {
-        error = AuthError.userNotFound;
-      } else if (e is NetworkException) {
-        error = AuthError.networkError;
-      } else if (e is NotAuthorizedServiceException) {
-        error = AuthError.passwordIncorrect;
-      } else {
-        error = AuthError.unknownError;
+      switch (e.failure) {
+        case AuthFailure.userNotFound:
+          error = AuthError.userNotFound;
+          break;
+        case AuthFailure.network:
+          error = AuthError.networkError;
+          break;
+        case AuthFailure.wrongPassword:
+          error = AuthError.passwordIncorrect;
+          break;
+        default:
+          error = AuthError.unknownError;
       }
-      safePrint('Error signing in: (${e.runtimeType}) ${e.message}');
+      safePrint('Error signing in: (${e.failure}) ${e.message}');
     }
     _isLoading = false;
     return error;
   }
 
-  Future<AuthError?> _handleSignInResult(SignInResult result) async {
-    if (result.nextStep.signInStep == AuthSignInStep.done) {
-      safePrint('Sign in is complete');
-
-      final authSession = await Amplify.Auth.fetchAuthSession();
-
-      if (authSession is CognitoAuthSession && isUsableSession(authSession)) {
-        _session = authSession;
-        safePrint("User ID (userSub): ${authSession.userSubResult.valueOrNull}");
+  Future<AuthError?> _afterSignIn(SignInStep step) async {
+    switch (step) {
+      case SignInStep.done:
+        final session = await CognitoAuth.instance.currentSession();
+        if (session == null) return AuthError.unknownError;
+        _session = session;
+        safePrint('User ID (sub): ${session.sub}');
         return null;
-      } else {
-        safePrint("Session is not a usable Cognito session");
-        return AuthError.unknownError;
-      }
-    } else if (result.nextStep.signInStep == AuthSignInStep.confirmSignInWithNewPassword) {
-      return AuthError.confirmSignInWithNewPassword;
-    } else if (result.nextStep.signInStep == AuthSignInStep.resetPassword) {
-      return AuthError.resetPassword;
-    } else {
-      safePrint('Sign in EROOR : ${result.nextStep.signInStep}');
-      return AuthError.unknownError;
-    }
-  }
-
-  Future<AuthError?> _handleResetPasswordResult(ResetPasswordResult result) async {
-    if (result.nextStep.updateStep == AuthResetPasswordStep.done) {
-      safePrint('Reset Password is complete');
-
-      final authSession = await Amplify.Auth.fetchAuthSession();
-
-      if (authSession is CognitoAuthSession && isUsableSession(authSession)) {
-        _session = authSession;
-        safePrint("User ID (userSub): ${authSession.userSubResult.valueOrNull}");
-        return null;
-      } else {
-        safePrint("Session is not a usable Cognito session");
-        return AuthError.unknownError;
-      }
-    } else {
-      safePrint('Reset password in EROOR : $result');
-      return AuthError.unknownError;
+      case SignInStep.newPasswordRequired:
+        return AuthError.confirmSignInWithNewPassword;
+      case SignInStep.resetPasswordRequired:
+        return AuthError.resetPassword;
     }
   }
 
@@ -508,15 +413,12 @@ class AuthModel extends ChangeNotifier {
 
     AuthError? error;
     if (!cancel) {
-      final options = ConfirmSignInOptions(
-          pluginOptions:
-              CognitoConfirmSignInPluginOptions(userAttributes: {CognitoUserAttributeKey.email: emailController.text}));
-
       try {
-        final result = await Amplify.Auth.confirmSignIn(confirmationValue: passwordController.text, options: options);
-        error = await _handleSignInResult(result);
+        await CognitoAuth.instance.completeNewPassword(passwordController.text, email: emailController.text.trim());
+        error = await _afterSignIn(SignInStep.done);
       } catch (e) {
-        error = null;
+        safePrint('completeNewPassword: $e');
+        error = AuthError.unknownError;
       }
     }
 
@@ -606,13 +508,11 @@ class AuthModel extends ChangeNotifier {
                               isLoadingCode = true;
                             },
                           );
-                          final result = await Amplify.Auth.resetPassword(
-                            username: username,
-                          );
-                          safePrint(">>>>>> : $result");
-                          if (result.nextStep.updateStep == AuthResetPasswordStep.confirmResetPasswordWithCode) {
-                            messageCode =
-                                "Un nouveau code a été envoyé par mail à ${result.nextStep.codeDeliveryDetails?.destination ?? "??"}";
+                          try {
+                            final destination = await CognitoAuth.instance.forgotPassword(username);
+                            messageCode = "Un nouveau code a été envoyé par mail à ${destination ?? "??"}";
+                          } catch (e) {
+                            messageCode = "Envoi du code impossible : $e";
                           }
                           setState(
                             () {
@@ -665,11 +565,10 @@ class AuthModel extends ChangeNotifier {
     AuthError? error;
     if (!cancel) {
       try {
-        final result = await Amplify.Auth.confirmResetPassword(
-            username: username, newPassword: passwordController.text, confirmationCode: codeController.text);
-        _handleResetPasswordResult(result);
+        await CognitoAuth.instance.confirmForgotPassword(username, codeController.text, passwordController.text);
+        error = await signInUser(username, passwordController.text);
       } catch (e) {
-        if (e is CodeMismatchException) {
+        if (e is AuthException && e.failure == AuthFailure.codeMismatch) {
           error = AuthError.codeResetPasswordInvalide;
         } else {
           error = AuthError.unknownError;

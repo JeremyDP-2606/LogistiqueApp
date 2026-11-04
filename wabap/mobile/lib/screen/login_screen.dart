@@ -1,4 +1,4 @@
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter/material.dart';
 import 'package:wabap/v2/screens/signup_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

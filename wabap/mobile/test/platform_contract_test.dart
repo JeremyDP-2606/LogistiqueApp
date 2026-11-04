@@ -1,5 +1,5 @@
 // Tests de contrat : l'app décode les réponses réellement produites par la fonction deliveryApi
-// (fichiers générés par tools/mock-appsync/export-fixtures.js).
+// (fichiers générés par backend/scripts/export-fixtures.js).
 import 'dart:convert';
 import 'dart:io';
 

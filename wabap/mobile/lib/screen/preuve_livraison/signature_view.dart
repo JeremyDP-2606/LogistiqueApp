@@ -13,7 +13,7 @@ import 'dart:ui' as ui;
 import 'package:wabap/models/Tournee.dart';
 import 'package:wabap/provider/tournee_provider.dart';
 import 'package:wabap/provider/location_provider.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import 'package:pool/pool.dart';

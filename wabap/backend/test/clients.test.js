@@ -39,7 +39,7 @@ function literalDocuments(dir, ext) {
       if (!ext.some((e) => f.name.endsWith(e))) continue;
       const src = fs.readFileSync(p, 'utf8');
       const re = ext.includes('.dart')
-        ? /r?'''([\s\S]*?)'''|r'((?:query|mutation|subscription)\b[^']*)'/g
+        ? /r?'''([\s\S]*?)'''/g // chaînes simples : voir dartDocuments (concaténations)
         : /`((?:query|mutation|subscription)\b[^`]*)`|'((?:query|mutation|subscription)\b[^']*)'/g;
       for (const m of src.matchAll(re)) {
         const doc = m[1] || m[2];
@@ -66,8 +66,41 @@ test('back-office Vue V1', async () => {
   assert.deepEqual(docs.flatMap(([l, d]) => check(l, d)), []);
 });
 
+// Documents Dart assemblés : chaînes adjacentes ('…' '…'), constantes interpolées ($_champs), \$ échappés
+const DART_LITERAL = /r?'(?:[^'\\]|\\.)*'/g;
+function joinDart(chunk, consts) {
+  return (chunk.match(DART_LITERAL) || []).map((x) => {
+    const raw = x.startsWith('r');
+    let v = x.slice(raw ? 2 : 1, -1);
+    if (!raw) v = v.replace(/\$(_\w+)/g, (all, n) => consts[n] ?? all).replace(/\\\$/g, '$');
+    return v;
+  }).join('');
+}
+function dartDocuments(dir) {
+  const out = [];
+  const walk = (d) => {
+    for (const f of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, f.name);
+      if (f.isDirectory()) { walk(p); continue; }
+      if (!f.name.endsWith('.dart')) continue;
+      const src = fs.readFileSync(p, 'utf8');
+      const consts = {};
+      for (let i = 0; i < 3; i++) { // constantes qui en utilisent d'autres
+        for (const m of src.matchAll(/const (_\w+) =\s*((?:r?'(?:[^'\\]|\\.)*'\s*)+);/g)) consts[m[1]] = joinDart(m[2], consts);
+      }
+      for (const m of src.matchAll(/(?:Api\.graphql|Api\.subscribe|_run)\(\s*((?:r?'(?:[^'\\]|\\.)*'\s*)+)/g)) {
+        const doc = joinDart(m[1], consts);
+        if (isDocument(doc)) out.push([path.relative(ROOT, p), doc]);
+      }
+    }
+  };
+  walk(path.join(ROOT, dir));
+  return out;
+}
+
 test('app Flutter', () => {
-  const docs = literalDocuments('mobile/lib', ['.dart']);
+  const docs = [...literalDocuments('mobile/lib', ['.dart']), ...dartDocuments('mobile/lib')];
+  assert.ok(docs.some(([l, d]) => l.endsWith('api_providers.dart') && d.includes('byTourneeOrderPosition')));
   assert.ok(docs.length > 10);
   assert.deepEqual(docs.flatMap(([l, d]) => check(l, d)), []);
 });

@@ -1,4 +1,4 @@
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wabap/models/Inscription.dart';
 import 'package:wabap/provider/api_providers.dart';

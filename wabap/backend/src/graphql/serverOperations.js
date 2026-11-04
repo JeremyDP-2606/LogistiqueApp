@@ -8,9 +8,14 @@ function createServerOperations({ files, v1 }) {
     // Rapport de fin de tournée V1
     invokeLambdaRapportTournee: ({ input }, ctx) => v1.rapport.generate(input, ctx.identity),
     // Lien d'envoi direct vers le stockage (remplace l'envoi Amplify Storage de l'app)
-    async createUploadUrl({ kind, contentType, tourId }, ctx) {
+    async createUploadUrl({ kind, contentType, tourId, key: v1Key }, ctx) {
       const ext = EXT[contentType];
       if (!ext) throw new Error(`Type de fichier non accepté : ${contentType}`);
+      // Preuves V1 : même emplacement qu'avec Amplify Storage (niveau public) : public/tournee_<id>/<fichier>
+      if (v1Key) {
+        if (!/^tournee_[A-Za-z0-9-]+\/[A-Za-z0-9._-]+$/.test(v1Key)) throw new Error('Clé de preuve invalide');
+        return files.createUploadUrl({ key: `public/${v1Key}`, contentType });
+      }
       const safeKind = String(kind).replace(/[^a-z0-9_-]/gi, '').slice(0, 30) || 'preuve';
       const key = `proofs/${ctx.identity.sub}/${tourId ? `${String(tourId).replace(/[^a-z0-9-]/gi, '')}/` : ''}${safeKind}-${crypto.randomUUID()}.${ext}`;
       return files.createUploadUrl({ key, contentType });

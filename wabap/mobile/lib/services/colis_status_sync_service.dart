@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:amplify_flutter/amplify_flutter.dart';
-import 'package:aws_common/vm.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
@@ -247,7 +246,7 @@ class ColisStatusSyncService {
 
   Future<String?> _currentUserId() async {
     try {
-      return (await Amplify.Auth.getCurrentUser()).userId;
+      return (await CognitoAuth.instance.currentSession())?.sub;
     } catch (_) {
       return null;
     }
@@ -571,12 +570,9 @@ class ColisStatusSyncService {
   }
 
   Future<void> _uploadFile(PendingUpload entry) async {
-    await Amplify.Storage.uploadFile(
-      key: entry.s3Key,
-      localFile: AWSFilePlatform.fromFile(File(entry.filePath)),
-      options: const StorageUploadFileOptions(
-          accessLevel: StorageAccessLevel.guest),
-    ).result;
+    // Même emplacement qu'avant (public/<clé>) : lien d'envoi temporaire demandé à l'API
+    final bytes = await File(entry.filePath).readAsBytes();
+    await Api.upload(bytes, kind: 'preuve', contentType: 'image/jpeg', key: entry.s3Key);
   }
 
   void dispose() {

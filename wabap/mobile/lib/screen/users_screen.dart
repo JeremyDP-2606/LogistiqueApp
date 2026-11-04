@@ -1,6 +1,5 @@
-import 'dart:convert';
 
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -47,16 +46,10 @@ class UsersScreen extends HookConsumerWidget {
   }
 
   Future<List<User>> fetchUsers(String? clientName, bool isSuperAdmin) async {
-    final response = await Amplify.API.get('/users').response;
-    if (response.statusCode == 200) {
-      List<dynamic> apiResponse = jsonDecode(response.decodeBody());
-      List<User> users = apiResponse.map((user) => User.fromJson(user)).toList();
-      return users
-          .where((user) => user.clientName == clientName || isSuperAdmin)
-          .toList(); //TODO : do this in lambda for security
-    } else {
-      throw Exception('Failed to load users');
-    }
+    // Le serveur ne renvoie à un administrateur client que les comptes de son client
+    final List<dynamic> apiResponse = await Api.rest('GET', '/users') as List<dynamic>;
+    final users = apiResponse.map((user) => User.fromJson(Map<String, dynamic>.from(user as Map))).toList();
+    return users.where((user) => user.clientName == clientName || isSuperAdmin).toList();
   }
 }
 

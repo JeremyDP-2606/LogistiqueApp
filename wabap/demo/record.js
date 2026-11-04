@@ -1,5 +1,5 @@
 // Tournage de la vidéo de démonstration : app cliente, app livreuse et back-office côte à côte,
-// sur l'AppSync simulé (vraie logique métier, données fictives). Voir demo/README.md.
+// sur le serveur Wabap en mode démonstration (vraie logique métier, données fictives). Voir demo/README.md.
 //
 //   node demo/record.js            → vidéo WebM dans demo/out/
 //   node demo/record.js --shots    → captures d'écran à chaque étape (mise au point)
@@ -7,9 +7,9 @@ const path = require('path');
 const fs = require('fs');
 const { chromium } = require('playwright');
 
-const MOCK = process.env.MOCK || 'http://localhost:4200';
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:8081/?persona=client';
-const COURIER_URL = process.env.COURIER_URL || 'http://localhost:8082/?persona=livreur';
+const MOCK = process.env.API || 'http://localhost:4000';
+const CLIENT_URL = process.env.CLIENT_URL || `http://localhost:8081/?persona=client&api=${encodeURIComponent(`${MOCK}/graphql`)}`;
+const COURIER_URL = process.env.COURIER_URL || `http://localhost:8082/?persona=livreur&api=${encodeURIComponent(`${MOCK}/graphql`)}`;
 const BO_URL = process.env.BO_URL || 'http://localhost:5174';
 const BO_CLIENT_ID = '1lq36a8msee59bdp7kek0sefsk';
 const OUT = path.join(__dirname, 'out');
@@ -65,8 +65,7 @@ async function gqlAs(apiKey, query, variables) {
     const resp = await fetch(`${MOCK}/graphql`, { method: 'POST', headers: { 'content-type': 'application/json', [header]: r.headers()[header] || '' }, body: r.postData() });
     return route.fulfill({ status: resp.status, headers: { ...cors, 'content-type': 'application/json' }, body: await resp.text() });
   };
-  await ctx.route(/appsync-api\.us-east-1\.amazonaws\.com\/graphql/, forward('authorization'));
-  await ctx.route(/api\.wabap-demo\.test\/graphql/, forward('x-api-key'));
+  await ctx.route(/api\.wabap-demo\.test\/graphql/, forward('authorization'));
   await ctx.route(/cognito-identity|cognito-idp/, (route) => route.fulfill({ status: 400, contentType: 'application/json', body: '{"__type":"NotAuthorizedException","message":"démo"}' }));
   await ctx.route(/places\.googleapis\.com\/v1\//, async (route) => {
     const r = route.request();
@@ -109,6 +108,10 @@ async function gqlAs(apiKey, query, variables) {
   const chapters = []; // horodatage des étapes, pour la page de partage
   const errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror ${e.message}`));
+  if (process.env.DEBUG) {
+    page.on('console', (m) => { if (m.type() === 'error') console.log(`[console] ${m.text().slice(0, 300)}`); });
+    page.on('response', (r) => { if (r.status() >= 400) console.log(`[http ${r.status()}] ${r.request().method()} ${r.url().slice(0, 120)}`); });
+  }
   await page.goto(`file://${path.join(__dirname, 'stage.html')}`);
   const stage = {
     caption: (step, text) => {

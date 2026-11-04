@@ -20,6 +20,8 @@ scalar AWSIPAddress
 
 enum Status {
   PENDING
+  PICKED_UP
+  NOT_PICKED_UP_NOT_EXIST
   IN_PROGRESS
   ISSUE
   COMPLETED
@@ -2718,9 +2720,9 @@ type Mutation {
   invokeLambdaRapportTournee(input: RapportInput!): RapportResponse
 
   """
-  Lien d'envoi temporaire (S3) d'une preuve : photo, signature. Renvoie { key, url, headers }.
+  Lien d'envoi temporaire (S3) d'une preuve : photo, signature. Renvoie { key, url, headers }. key (V1) : tournee_<id>/<fichier>, rangé sous public/ comme avant.
   """
-  createUploadUrl(kind: String!, contentType: String!, tourId: ID): AWSJSON
+  createUploadUrl(kind: String!, contentType: String!, tourId: ID, key: String): AWSJSON
   createSubscriber(input: CreateSubscriberInput!, condition: ModelSubscriberConditionInput): Subscriber
   updateSubscriber(input: UpdateSubscriberInput!, condition: ModelSubscriberConditionInput): Subscriber
   deleteSubscriber(input: DeleteSubscriberInput!, condition: ModelSubscriberConditionInput): Subscriber

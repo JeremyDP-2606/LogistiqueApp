@@ -1,21 +1,16 @@
-import 'package:amplify_api/amplify_api.dart';
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter/material.dart';
-import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wabap/models/ModelProvider.dart';
 import 'package:wabap/provider/auth_provider.dart';
 import 'package:wabap/screen/error_screen.dart';
 import 'package:wabap/screen/home_screen.dart';
 import 'package:wabap/screen/login_screen.dart';
 import 'package:wabap/screen/splash_screen.dart';
-import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:wabap/services/colis_status_sync_service.dart';
 
 import 'package:wabap/v2/payment.dart';
 import 'package:wabap/v2/screens/client_home_screen.dart';
 
-import 'amplifyconfiguration.dart';
 import 'theme.dart';
 
 void main() {
@@ -23,13 +18,18 @@ void main() {
 }
 
 final initApp = FutureProvider<void>((ref) async {
-  await Amplify.addPlugins(
-      [AmplifyAPI(modelProvider: ModelProvider.instance, baseHttpClient: IdTokenHttpClient()), AmplifyAuthCognito(),AmplifyStorageS3(),
-      ]);
-  await Amplify.configure(amplifyconfig);
+  // Chaque appel à l'API porte le jeton d'identité Cognito (rafraîchi si besoin) ;
+  // une session devenue inutilisable déclenche la déconnexion.
+  Api.tokenProvider = () async {
+    try {
+      return (await CognitoAuth.instance.currentSession())?.idToken;
+    } on AuthException catch (e) {
+      if (e.failure == AuthFailure.sessionExpired) CognitoAuth.instance.reportExpired();
+      return null;
+    }
+  };
 
-  // Must come BEFORE the first fetchSession(): the Amplify hub is a broadcast
-  // stream, and the launch-time SESSION_EXPIRED is emitted by that very fetch.
+  // À faire avant le premier fetchSession() : les événements de session ne sont pas rejoués.
   ref.read(authProvider).initHubListener();
 
   await ref.read(authProvider).fetchSession();
@@ -66,35 +66,5 @@ class WabapApp extends ConsumerWidget {
         error: (e, __) => ErrorScreen(e.toString()),
       ),
     );
-  }
-}
-
-class IdTokenHttpClient extends AWSBaseHttpClient {
-  @override
-  Future<AWSBaseHttpRequest> transformRequest(
-    AWSBaseHttpRequest request,
-  ) async {
-    if (request.path != "/graphql") return request;
-    try {
-      final session = await Amplify.Auth.fetchAuthSession();
-      // valueOrNull, never .value: with an expired refresh token
-      // fetchAuthSession() returns a session whose userPoolTokensResult is an
-      // error result, and `.value` rethrows SessionExpiredException from inside
-      // the HTTP layer, where nothing catches it. Skipping the header instead
-      // lets AppSync answer 401, which the API error handling already covers —
-      // and this very fetchAuthSession() is what makes Amplify emit the
-      // SESSION_EXPIRED hub event that drives the sign-out.
-      final idToken = session is CognitoAuthSession
-          ? session.userPoolTokensResult.valueOrNull?.idToken.raw
-          : null;
-      if (idToken != null) {
-        request.headers.addAll({AWSHeaders.authorization: idToken});
-      } else {
-        safePrint('IdTokenHttpClient: no usable ID token, header left as-is.');
-      }
-    } catch (e) {
-      safePrint('IdTokenHttpClient: could not attach ID token ($e).');
-    }
-    return request;
   }
 }

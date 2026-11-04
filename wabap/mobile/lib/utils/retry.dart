@@ -1,17 +1,25 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'dart:io' show SocketException;
+
+import 'package:http/http.dart' show ClientException;
+import 'package:wabap/backend/backend.dart';
 
 /// Default [retryIf] predicate: retry network-shaped errors, but never retry
 /// auth or validation errors - those fail identically on every attempt and
 /// retrying them just wastes the burst window.
 bool isRetryableError(Object error) {
   if (error is TimeoutException) return true;
-  if (error is NetworkException) return true;
+  if (error is SocketException || error is ClientException) return true;
   // Real auth failures (expired session, not authorized...) are not fixed by
   // retrying; the user has to sign in again.
-  if (error is AuthException) return false;
+  if (error is AuthException) return error.failure == AuthFailure.network;
+  if (error is ApiException) {
+    if (error.isUnauthorized || error.errorType == 'Unauthorized' || error.errorType == 'ValidationError') return false;
+    // Erreurs serveur (5xx) ou de réseau : nouvelle tentative
+    return error.statusCode == null || error.statusCode! >= 500;
+  }
   final message = error.toString().toLowerCase();
   if (message.contains('unauthorized') ||
       message.contains('not authorized') ||

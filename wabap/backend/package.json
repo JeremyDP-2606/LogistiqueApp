@@ -13,7 +13,8 @@
     "test": "node --test test/*.test.js",
     "schema": "node scripts/print-schema.js > schema/api.graphql",
     "tables:check": "node scripts/tables.js check",
-    "tables:create": "node scripts/tables.js create"
+    "tables:create": "node scripts/tables.js create",
+    "demo": "STORE=memory AUTH_MODE=dev DEMO_SEED=true SCHEDULER_ENABLED=false node src/server.js"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1161.0",

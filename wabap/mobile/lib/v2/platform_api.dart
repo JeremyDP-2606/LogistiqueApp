@@ -1,9 +1,9 @@
-// Appels GraphQL (AppSync) de la plateforme : courses, suivi, tournées, preuves, gains.
-// Toutes les écritures passent par la fonction deliveryApi (voir amplify/backend/function/deliveryApi).
+// Appels GraphQL de la plateforme (API Wabap) : courses, suivi, tournées, preuves, gains.
+// Toutes les écritures passent par les opérations métier du serveur (backend/src/delivery).
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 
 import 'platform_models.dart';
 
@@ -20,16 +20,15 @@ const _tour = 'id ref name date startTime slot status estimatedKm notices { at m
 
 class PlatformApi {
   static Future<Map<String, dynamic>> _run(String document, Map<String, dynamic> variables, {bool mutation = false}) async {
-    final request = GraphQLRequest<String>(document: document, variables: variables);
-    final GraphQLResponse<String> response;
     try {
-      response = mutation ? await Amplify.API.mutate(request: request).response : await Amplify.API.query(request: request).response;
+      return await Api.graphql(document, variables);
     } on ApiException catch (e) {
-      throw PlatformException('Connexion impossible : ${e.message}');
+      throw PlatformException(e.statusCode != null && e.statusCode! >= 400 ? 'Connexion impossible : ${e.message}' : e.message);
+    } on TimeoutException {
+      throw PlatformException('Connexion impossible : le serveur ne répond pas');
+    } catch (e) {
+      throw PlatformException('Connexion impossible : $e');
     }
-    if (response.hasErrors) throw PlatformException(response.errors.first.message);
-    if (response.data == null) throw PlatformException('Réponse vide du serveur');
-    return jsonDecode(response.data!) as Map<String, dynamic>;
   }
 
   // Les opérations de la fonction renvoient un AWSJSON (chaîne JSON)
@@ -123,13 +122,9 @@ class PlatformApi {
 
   /// Ajouts, retraits ou réordonnancement de la tournée par le dispatcher (spec §7)
   static StreamSubscription onTourChanged(String tourId, void Function(TourSummary) onData) {
-    final stream = Amplify.API.subscribe(GraphQLRequest<String>(
-      document: 'subscription O(\$id: ID!) { onTourChanged(id: \$id) { $_tour } }',
-      variables: {'id': tourId},
-    ));
-    return stream.listen((e) {
-      if (e.data == null) return;
-      final t = (jsonDecode(e.data!) as Map<String, dynamic>)['onTourChanged'];
+    final stream = Api.subscribe('subscription O(\$id: ID!) { onTourChanged(id: \$id) { $_tour } }', {'id': tourId});
+    return stream.listen((data) {
+      final t = data['onTourChanged'];
       if (t is Map) onData(TourSummary.fromJson(Map<String, dynamic>.from(t)));
     }, onError: (Object e) => safePrint('Abonnement tournée interrompu : $e'));
   }

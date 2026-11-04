@@ -137,6 +137,10 @@ type ColisStatus @model
 
 enum Status {
   PENDING
+  "Colis ramassé (contrôle du ramassage)"
+  PICKED_UP
+  "Colis non ramassé : absent ou inexistant (contrôle du ramassage)"
+  NOT_PICKED_UP_NOT_EXIST
   IN_PROGRESS
   ISSUE
   COMPLETED
@@ -635,8 +639,8 @@ type Mutation {
   markStatementPaid(courierId: ID!, month: String!): AWSJSON @auth(groups: ["wabap", "admin", "finance"])
   "Rapport de fin de tournée V1 (envoyé par e-mail au client), appelé par l'app livreur"
   invokeLambdaRapportTournee(input: RapportInput!): RapportResponse
-  "Lien d'envoi temporaire (S3) d'une preuve : photo, signature. Renvoie { key, url, headers }."
-  createUploadUrl(kind: String!, contentType: String!, tourId: ID): AWSJSON @auth(groups: ["livreur", "wabap", "admin", "dispatch"])
+  "Lien d'envoi temporaire (S3) d'une preuve : photo, signature. Renvoie { key, url, headers }. key (V1) : tournee_<id>/<fichier>, rangé sous public/ comme avant."
+  createUploadUrl(kind: String!, contentType: String!, tourId: ID, key: String): AWSJSON @auth(groups: ["livreur", "wabap", "admin", "dispatch"])
 }
 
 input RapportInput { tourneeId: ID! message: String }

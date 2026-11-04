@@ -1,5 +1,5 @@
 // Inscription libre des clients (particuliers et professionnels) : e-mail vérifié par code.
-import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:wabap/backend/backend.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -44,16 +44,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
     setState(() => _busy = true);
     try {
-      final result = await Amplify.Auth.signUp(
-        username: email,
-        password: _password.text,
-        options: SignUpOptions(userAttributes: {
-          AuthUserAttributeKey.email: email,
-          AuthUserAttributeKey.givenName: _name.text.trim(),
-          if (phone != null) AuthUserAttributeKey.phoneNumber: phone,
-        }),
-      );
-      if (result.isSignUpComplete) {
+      final confirmed = await CognitoAuth.instance.signUp(email, _password.text, {
+        'email': email,
+        'given_name': _name.text.trim(),
+        if (phone != null) 'phone_number': phone,
+      });
+      if (confirmed) {
         await _signIn();
       } else {
         setState(() => _awaitingCode = true);
@@ -68,7 +64,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   Future<void> _confirm() async {
     setState(() => _busy = true);
     try {
-      await Amplify.Auth.confirmSignUp(username: _email.text.trim(), confirmationCode: _code.text.trim());
+      await CognitoAuth.instance.confirmSignUp(_email.text.trim(), _code.text.trim());
       await _signIn();
     } on AuthException catch (e) {
       if (mounted) showError(context, e.message);
@@ -79,7 +75,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   Future<void> _resend() async {
     try {
-      await Amplify.Auth.resendSignUpCode(username: _email.text.trim());
+      await CognitoAuth.instance.resendSignUpCode(_email.text.trim());
       if (mounted) showInfo(context, 'Nouveau code envoyé à ${_email.text.trim()}');
     } on AuthException catch (e) {
       if (mounted) showError(context, e.message);

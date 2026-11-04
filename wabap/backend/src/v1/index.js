@@ -44,7 +44,9 @@ function createV1({ store, mailer, config, log, fetchImpl, cognitoClient }) {
   function routes(router) {
     router.get('/users', handler(async (req) => {
       if (!req.identity.groups.includes('admin') && !req.identity.groups.includes('wabap')) throw Object.assign(new Error('Accès réservé aux administrateurs'), { status: 403 });
-      return users.list();
+      // Administrateur d'un client : uniquement les comptes de ce client
+      const all = await users.list();
+      return clientOf(req.identity) ? all.filter((u) => u.client_name === clientOf(req.identity)) : all;
     }));
     router.post('/missions/:id/tournees', handler(async (req) => {
       await missionFor(req);
